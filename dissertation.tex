@@ -1,0 +1,68 @@
+\input{header}
+\input{macro}
+
+\begin{document}
+
+\title{A long and verbose title that sounds complicated but is really quite simple}
+\author{Youngjun Lee}
+\degreeyear{2021}
+\degreemonth{August}
+\degree{DOCTOR OF PHILOSOPHY}
+\chair{Dongwook Lee}
+\committeememberone{Nicholas Brummell}
+\committeemembertwo{Hongyun Wang}
+%\committeememberthree{Professor 4} % Uncomment if you have 4 committee members. Also change the next line to `\numberofmembers{4}`
+\numberofmembers{3}
+\deanlineone{Peter F. Biehl}
+\deanlinetwo{Vice Provost and Dean of Graduate Studies}
+\deanlinethree{}
+\field{Applied Mathematics and Statistics}
+\campus{Santa Cruz}
+
+\begin{frontmatter}
+\maketitle
+
+\copyrightpage
+
+\tableofcontents
+
+\listoffigures
+
+\listoftables
+
+\begin{abstract}
+\input{contents/abstract}
+\end{abstract}
+
+\begin{dedication}
+\vspace*{\fill}
+\begin{center}
+A loving dedication.
+\end{center}
+\vspace*{\fill}
+\end{dedication}
+
+\begin{acknowledgements}
+Proper acknowledgments of everyone else who helped you graduate.
+\end{acknowledgements}
+
+\end{frontmatter}
+
+\chapter{Introduction}
+\input{contents/introduction}
+
+\chapter{Results}
+\input{contents/results}
+
+\chapter{Conclusion}
+\input{contents/conclusion}
+
+% \appendix % Uncomment if you have appendices. Add them below this exactly as you would a regular chapter.
+
+\nocite{*}
+\bibliographystyle{plain}
+\singlespacing
+\bibliography{dissertation}
+\doublespacing
+
+\end{document}
