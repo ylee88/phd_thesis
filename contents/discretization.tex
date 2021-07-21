@@ -1,0 +1,269 @@
+\chapter{Discretization Methods}\label{chap:discrete_methods}
+
+This dissertation interests in solving the general conservation laws of hyperbolic PDEs,
+predicting numerical solutions with high-order accuracy.
+This chapter introduces two general ways to discretize the Euler equations,
+which will be of particular interest in this dissertation.
+
+\section{Euler Equations}\label{sec:euler_eqns}
+
+In three dimensions, the conservation laws may be written as,
+\begin{equation}\label{eq:gov}
+    \partial_{t} \bU + \nabla \cdot \mathcal{F}(\bU)
+    = \partial_{t} \bU + \partial_{x} \bF (\bU) + \partial_{y} \bG (\bU) + \partial_{z} \bH (\bU) = 0,
+\end{equation}
+where \( \bU \) is a vector of conserved variables and
+\( \mathcal{F} = {(\bF (\bU), \bG (\bU), \bH (\bU))}^{T} \) is the flux function
+in the \( x \), \( y \), and \( z \) directions.
+The conservation law is considered hyperbolic
+if the flux Jacobian has only real eigenvalues and is diagonalizable. Thus,
+\begin{equation}\label{eq:hyperbolic}
+    \bA = \partial_{\bU} \bF = \bR \mathbf{\Lambda} \bL,
+\end{equation}
+where \( \bA \) is the flux Jacobian in \( x \)-direction,
+\( \mathbf{\Lambda} \) is a diagonal matrix with real eigenvalues, and
+\( \bL \) and \( \bR \) are corresponding left and right eigenvectors.
+
+This dissertation focuses on solving Euler equations, which govern
+compressible, adiabatic inviscid flow.
+In the Euler equations, the conserved variables and the flux functions are defined as,
+\begin{equation}\label{eq:euler-3d}
+    \bU = \begin{bmatrix}
+        \rho \\
+        \rho u \\
+        \rho v \\
+        \rho w \\
+        E
+    \end{bmatrix},\quad
+    \bF (\bU) = \begin{bmatrix}
+        \rho u \\
+        \rho u^{2} + p \\
+        \rho u v \\
+        \rho u w \\
+        u \left( E + p \right)
+    \end{bmatrix},\quad
+    \bG (\bU) = \begin{bmatrix}
+        \rho v \\
+        \rho u v \\
+        \rho v^{2} + p \\
+        \rho v w \\
+        v \left( E + p \right)
+    \end{bmatrix},\quad
+    \bH (\bU) = \begin{bmatrix}
+        \rho w \\
+        \rho u w \\
+        \rho v w \\
+        \rho w^{2} + p \\
+        w \left( E + p \right)
+    \end{bmatrix}.
+\end{equation}
+In the above equations, \( \rho \) is the density,
+\( \mathbf{u} = {(u, v, w)}^{T} \) is the velocity,
+\( E \) is the total energy, and \( p \) is the pressure of the fluid.
+\( E \), the total energy of the fluid represents the
+sum of internal and kinetic energy,
+\begin{equation}\label{eq:total_E}
+    E = \epsilon + \frac{1}{2} \rho \mathbf{u}^{2},
+\end{equation}
+where the internal energy of the fluid, \( \epsilon \), obeys the equation of state. (EOS)
+This dissertation uses the ideal gas law:
+\begin{equation}\label{eq:ideal_eos}
+    \epsilon = \frac{p}{\gamma - 1},
+\end{equation}
+where \( \gamma \) is the specific heat ratio.
+
+In the following, this dissertation uses the Euler equation as an example
+of the conserved hyperbolic system.
+However, numerical methods presented in this dissertation are valid for any system
+of the form of~\cref{eq:gov}. Magnetohydrodynamics (MHD) equations, for example,
+the general numerical strategies will be nearly identical to the Euler equations
+except for the solenoidal constraint of the magnetic field. (\( \nabla \cdot \bB = 0 \))
+Thus, the high-order methods presented in this dissertation can be applied to the MHD simulation code easily.
+
+
+\section{Finite Volume Method}\label{sec:fvm}
+
+The popular way to consider discretized variables for the conserved system
+is to cast volume integrals to the governing equations, called the finite volume method. (FVM)
+Consider~\cref{eq:gov} discretized on a uniform grid containing cells with equal spacing \( (\dx, \dy, \dz) \)
+in the three spatial dimensions.
+Then, each cell's center can be indexed by \( (i, j, k) \) at \( (x_{i}, y_{j}, z_{k}) \)
+and the cell's face centers at each interface by \( (i \pm \half, j, k), (i, j \pm \half, k), (i, j, k \pm \half) \).
+Taking the volume average of each computational cell (\( \frac{1}{\mathcal{V}_{ijk}} \int_{\mathcal{V}_{ijk}} \cdot \mathop{d \mathcal{V}}\))
+to~\cref{eq:gov} and applying the divergence theorem, we have,
+\begin{equation}\label{eq:fvm}
+    \frac{1}{\mathcal{V}_{ijk}} \int_{\mathcal{V}_{ijk}} \partial_{t} \bU \mathop{d \mathcal{V}}
+    + \frac{1}{\mathcal{V}_{ijk}} \oint_{\mathcal{S}_{ijk}} \mathcal{F} (\bU) \cdot \mathbf{n} \mathop{d \mathcal{S}} = 0,
+\end{equation}
+where \( \mathcal{V}_{ijk} \) is the volume of the cell at \( i,j,k \),
+and \( \mathcal{S}_{ijk} \) is the surrounding surfaces of the cell at \( i,j,k \).
+
+The semi-discretized form of FVM representation of the conserved system
+is obtained by substituting the dimensionally split flux functions
+(\( \bF (\bU), \bG (\bU), \bH (\bU) \)):
+\begin{equation}\label{eq:fvm_discrete}
+    \begin{split}
+        \partial_{t} \overline{\bU}_{i,j,k} =& - \frac{1}{\dx} \left( \widetilde{\bF}_{\iph,j,k} - \widetilde{\bF}_{\imh,j,k} \right) \\
+                                             & - \frac{1}{\dy} \left( \widetilde{\bG}_{i,\jph,k} - \widetilde{\bG}_{i,\jmh,k} \right) \\
+                                             & - \frac{1}{\dz} \left( \widetilde{\bH}_{i,j,\kph} - \widetilde{\bH}_{i,j,\kmh} \right).
+    \end{split}
+\end{equation}
+
+In the above equation, the overline indicates a volume-averaged quantity,
+while the tilde indicates a surface average at half-indexed cell face.
+Note that the above semi-discretized form of FVM scheme is a purely analytical result
+without any numerical approximation. The numerical methods are used to estimate
+surface-averaged fluxes at each cell's interfaces and
+update the volume-averaged conserved variables to the next time step.
+
+The most common way to approximate interfacial fluxes for FVM solver for Euler equations is to solve
+the Riemann problem at cell interfaces following the Godunov method~\cite{godunov1959difference}.
+The Riemann problem is composed of a conservation equation with a single discontinuity
+in its initial condition. As firstly introduced by Godunov in~\cite{godunov1959difference},
+the Riemann solver (\( \mathcal{RS} \)) gives a numerical flux across the discontinuity in the Riemann problem.
+For example, the numerical flux across the discontinuity at \( x_{\iph,j,k} \)
+can be calculated as,
+\begin{equation}\label{eq:riemann_solver}
+    \hat{\bff}_{\iph,j,k} = \mathcal{RS}(\bU^{\text{L}}_{\iph,j,k}, \; \bU^{\text{R}}_{\iph,j,k}).
+\end{equation}
+
+The precedent task for solving the Riemann problem is to determining Riemann states at interfaces.
+Note that the inputs of the Riemann solver are regarded as \textit{pointwise} values, (\( \bU^{\text{L}}_{\iph,j,k}, \; \bU^{\text{R}}_{\iph,j,k} \))
+while the fundamental data type of FVM is the \textit{volume-averaged} values. (\( \overline{\bU}_{i,j,k} \))
+To specify the pointwise Riemann states at interfaces with given volume-averaged conserved variables,
+they must be reconstructed from the neighboring volume-averaged quantities.
+For example, a one-dimensional stencil with radius=\( r \),
+the left Riemann states at \( i + \half \) can be reconstructed from
+cell-centered volume-averaged conserved variables (\( \overline{\bU}_{i-r,j,k}, \dots, \overline{\bU}_{i,j,k}, \dots, \overline{\bU}_{i+r,j,k} \)),
+using \( p \)-th order accurate reconstruction operator \( \mathcal{R}(\cdot) \):
+\begin{equation}\label{eq:fvm_recon}
+    \bU^{\text{L}}_{\iph,j,k} = \mathcal{R}(\overline{\bU}_{i-r,j,k}, \dots, \overline{\bU}_{i+r,j,k}) + \mathcal{O} (\dx^{p}).
+\end{equation}
+The spatial order of accuracy, \( p \), of the FVM solver is thereby determined by choice of the reconstruction operator, \( \mathcal{R}(\cdot) \)
+which will be discussed in \noter{find my ref!}.
+
+It is important to note that the numerical flux resulting from the Riemann solver
+is also a pointwise representation, while the surface-averaged fluxes
+(\( \widetilde{\bF}_{i \pm \half,j,k}, \widetilde{\bG}_{i,j \pm \half,k}, \widetilde{\bH}_{i,j,k \pm \half} \))
+are needed for FVM formulation as presented in~\cref{eq:fvm_discrete}.
+This should be addressed thoroughly, as a naive approximation of the pointwise flux to
+the surface-averaged flux is bounded by second-order accuracy no matter the accuracy of the Riemann states:
+\begin{equation}\label{eq:fvm_need_quad}
+    \begin{split}
+        \widetilde{\bF}_{\iph,j,k} &= \frac{1}{\dy\dz} \int^{y_{\jph}}_{y_{\jmh}} \int^{z_{\kph}}_{z_{\kmh}} \bF(x_{\iph}, y, z) \mathop{dz} \mathop{dy} \\
+                                   &= \bF_{\iph,j,k} + \mathcal{O}(\dy^{2}, \dz^{2}).
+    \end{split}
+\end{equation}
+The conventional way to achieve higher than second-order accuracy in FVM solver
+is to solve the Riemann problem at multiple quadrature points
+on each face.~\cite{titarev2004finite,mccorquodale2011high,zhang2011order}
+More recent studies proposed ways to avoid multiple calls of Riemann solver,
+reconstructing surface-averaged fluxes from pointwise Riemann fluxes,~\cite{buchmuller2014improved,felker2018fourth}
+using linear combinations of Riemann fluxes,~\cite{dumbser2007quadrature,dumbser2008unified}
+to name a few.
+
+
+\section{Finite Difference method}\label{sec:fdm}
+
+As it firstly proposed in~\cite{shu1989efficient}, the finite difference method (FDM) seeks a discretization of
+the spatial derivatives of the fluxes in \textit{pointwise} representation.
+Assuming that there exist numerical fluxes satisfy the conservative form as,
+\begin{equation}\label{eq:fdm_discrete}
+    \begin{split}
+        \partial_{t} \overline{\bU}_{i,j,k} =& - \frac{1}{\dx} \left( \hat{\bff}_{\iph,j,k} - \hat{\bff}_{\imh,j,k} \right) \\
+                                             & - \frac{1}{\dy} \left( \hat{\bg}_{i,\jph,k} - \hat{\bg}_{i,\jmh,k} \right) \\
+                                             & - \frac{1}{\dz} \left( \hat{\bh}_{i,j,\kph} - \hat{\bh}_{i,j,\kmh} \right),
+    \end{split}
+\end{equation}
+where \( \hat{\bff}_{i \pm \half,j,k}, \hat{\bg}_{i,j \pm \half,k}, \hat{\bh}_{i,j,k \pm \half} \)
+are the \textit{pointwise} numerical fluxes in each direction at half-indexed cell-face centers.
+The remaining task is to identify the numerical fluxes in desired order of accuracy, \( p \), which satisfy,
+\begin{equation}\label{eq:fdm_flux_deriv}
+    \left. \partial_{x} \bF \right|_{\bx = \bx_{ijk}} =
+    \frac{1}{\dx} \left( \hat{\bff}_{\iph,j,k} - \hat{\bff}_{\imh,j,k} \right) +
+        \mathcal{O} (\dx^{p}), \quad
+    \bx_{ijk} = (x_i, y_j, z_k),
+\end{equation}
+and similarly in \( y \) and \( z \) fluxes.
+
+In order to specify the numerical fluxes for FDM, consider the pointwise \( x \)-flux \( \bF (x, y_{j}, z_{k}) \)
+as a one-dimensional cell average of an auxiliary function \( \hat{\bF} \),
+\begin{equation}\label{eq:fdm_aux_function}
+    \bF(x,y_j,z_k) = \frac{1}{\dx} \int_{x - \frac{\dx}{2}}^{x + \frac{\dx}{2}} \hat{\bF}(\xi, y_j, z_k) \mathop{d\xi}.
+\end{equation}
+Then the analytic derivative of~\cref{eq:fdm_aux_function} at \( x = x_{i} \) in \( x \)-direction becomes
+\begin{equation}\label{eq:fdm_aux_deriv}
+    \left. \partial_{x} \bF \right|_{x=x_{i}} =
+    \frac{1}{\dx} \left(\hat{\bF}(x_{\iph}, y_j, z_k) - \hat{\bF}(x_{\imh}, y_j, z_k) \right).
+\end{equation}
+Comparing~\cref{eq:fdm_flux_deriv} and~\cref{eq:fdm_aux_deriv},
+the numerical fluxes in FDM are obtained with desired order of accuracy, \( p \),
+if they can be defined with
+the following relationship with $\hat{\bF}$,
+\begin{equation}\label{eq:fdm_num_flux_approx}
+    \hat{\bff}_{\iph,j,k} = \hat{\bF} (x_{\iph},y_j,z_k) + \mathcal{O} (\dx^{p}).
+\end{equation}
+Mathematically speaking, the inverse problem of~\cref{eq:fdm_num_flux_approx} is exactly the same as
+the conventional 1D reconstruction problem in FVM, the operation of which is specifically designed to
+find the primitive function value $\hat{\bF}$ at a certain location (mostly, $x_{i \pm \half}$) in the $i$-th cell,
+given the integral-averaged (or volume-averaged) values ${\bF}$ at nearby stencil points
+as input. Namely, this can be written as
+\begin{equation}\label{eq:fdm_recon}
+    \hat{\bF}(\xi,y_j,z_k) = \mathcal{R}\left(\bF_{i-r,j,k}, \dots, \bF_{i+r,j,k}\right) + \mathcal{O} (\dx^p),
+    \quad
+    \xi \in [x_{\imh}, x_{\imh}],
+\end{equation}
+where \( \mathcal{R}(\cdot) \) is a $p$-th order accurate reconstruction operator
+that used for FVM formulation in~\cref{sec:fvm}, and will be discussed in \noter{find my ref!}.
+
+Contrary to FVM, the conservative FDM uses only the pointwise values for constructing numerical strategies,
+not requiring the data conversion between pointwise and volume-averaged quantities.
+In addition, the high-order reconstruction schemes used for constructing Riemann states in FVM
+can be used for constructing numerical fluxes in FDM
+without intense changes in the simulation code~--~only a simple change in the input variables for the reconstruction operator.
+This simplicity in numerical strategy attracts researchers in the CFD community, leading various adoptions in
+high-order solvers.~\cite{jiang1996efficient,shu1998essentially,mignone2010high,christlieb2015picard,seal2016explicit}
+
+Compared to FVM, the major difference of FDM is obtaining high-order numerical fluxes
+directly from the reconstruction operator.
+Although it simplifies the numerical schemes, the direct formulation of the numerical fluxes
+hinders its further modifications while keeping a high-order convergence rate.
+
+For example, the adaptive mesh refinement (AMR) grid configuration~\cite{berger1989local,berger1998adaptive}
+requires numerical fluxes splitting between the coarse grid to the fine grid in a conservative manner.
+Conventionally, this is ensured by an additional flux correction step in FVM formulation.~\cite{berger1998adaptive}
+However, in FDM, a different approach should be taken because modifying the high-order numerical fluxes
+may spoil the order of accuracy.
+One possible way to maintain conservation across coarse to the fine grid points
+is to apply nonlinear interpolation on the conserved variables, imply them as boundary conditions,
+and distribute the calculated errors among coarse grid points.~\cite{shen2011adaptive}
+
+Another limitation on the direct formulation of numerical fluxes in FDM is
+the lack of the option to include substructure in the wave model,
+which Riemann solver typically does in FVM to resolve certain features better.
+Del Zanna proposed one alternative way of FDM~\cite{del2003efficient,del2007echo},
+which views numerical fluxes as the Riemann fluxes with the series of high-order correction terms.
+This approach can achieve a high-order convergence rate with Riemann fluxes like in FVM,
+without the additional data type conversions required of conventional FVM.~\cite{reyes2019variable}
+
+\section{Conclusion}\label{sec:discrete_conclusion}
+
+Two major discretization strategies for conservative systems have been presented.
+Both the finite difference and finite volume methods are able to achieve
+high-order spatial accuracy by reconstructing volume-averaged quantities to the pointwise values.
+
+The finite difference method
+\begin{itemize}
+    \item evolves the pointwise conserved variables,
+    \item provides a straightforward framework without data type conversions,
+    \item requires high-order numerical fluxes constructed from the pointwise, cell-centered physical fluxes directly from the high-order reconstruction methods and
+    \item may be delicate with the additional modifications on the numerical fluxes.
+\end{itemize}
+
+The finite volume method
+\begin{itemize}
+    \item evolves the volume-averaged conserved variables,
+    \item requires rigorous data type conversions to maintain high-order accuracy,
+    \item requires high-order reconstruction of the Riemann states from the cell-centered conserved variables and
+    \item guarantees the conservation laws over the whole spatiotemporal domain by design.
+\end{itemize}

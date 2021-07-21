@@ -3,7 +3,7 @@
 
 \begin{document}
 
-\title{A long and verbose title that sounds complicated but is really quite simple}
+\title{A Fast and Portable High-Order in Temporal Method for Computational Fluid Dynamics}
 \author{Youngjun Lee}
 \degreeyear{2021}
 \degreemonth{August}
@@ -30,10 +30,16 @@
 
 \listoftables
 
+%%%%%%%%%%%%
+% Abstract %
+%%%%%%%%%%%%
 \begin{abstract}
 \input{contents/abstract}
 \end{abstract}
 
+%%%%%%%%%%%%%%%
+% Dedications %
+%%%%%%%%%%%%%%%
 \begin{dedication}
 \vspace*{\fill}
 \begin{center}
@@ -42,19 +48,27 @@ A loving dedication.
 \vspace*{\fill}
 \end{dedication}
 
+%%%%%%%%%%%%%%%%%%%%
+% Acknowledgements %
+%%%%%%%%%%%%%%%%%%%%
 \begin{acknowledgements}
-Proper acknowledgments of everyone else who helped you graduate.
+\input{contents/acknowledgements.tex}
 \end{acknowledgements}
 
 \end{frontmatter}
 
-\chapter{Introduction}
+
+% lets input actual works
 \input{contents/introduction}
 
-\chapter{Results}
+\input{contents/discretization}
+
+\input{contents/high_order_methods_for_fdm}
+
+\input{contents/sfpif}
+
 \input{contents/results}
 
-\chapter{Conclusion}
 \input{contents/conclusion}
 
 % \appendix % Uncomment if you have appendices. Add them below this exactly as you would a regular chapter.

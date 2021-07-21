@@ -1,1 +1,54 @@
-\label{ch:introduction}
+\chapter{Introduction}\label{chap:introduction}
+
+In past decades, the rapid evolution of the high-performance computing (HPC) systems
+offers growing computational capacity for the numerical simulations of various scientific fields,
+where conducting a direct experiment is extremely expensive or notoriously complicated.
+As the computing power of HPC systems gradually increases,
+scientists can compute more complex and computationally intensive physical models such as
+visualizing black holes~\cite{james2015gravitational,alberdi2019first},
+simulating nuclear fusions~\cite{haines2016detailed,gaffney2019making},
+studying laser-plasma interactions~\cite{meinecke2014turbulent,tzeferacos2018laboratory},
+to name a few.
+
+In order to simulate these physical phenomena,
+it demands meticulously designed numerical algorithms for solving
+nonlinear, multidimensional, and multi-physics equations judiciously.
+Generally speaking, numerical algorithms require more computational power for better solution accuracy,
+\textit{i.e.}, using high-resolution grid configuration.
+
+However, the recent hardware development trend
+--~the progression of the memory capacity per compute core has become gradually saturated~\cite{attig2011trends}~--
+is compelling the HPC community to find more efficient ways
+that can best exercise computing resources in pursuing computer simulations.
+As reported in 2014~\cite{dongarra2014applied}, decreasing memory density per compute core
+will be the primary limiting factor to the scalability of scientific simulation codes.
+
+To meet this end, modern practitioners have relentlessly delved into advancing
+high-arithmetic-intensity models that can increase numerical accuracy per degree of freedom
+while operating with reduced memory requirements and data transfers in HPC architectures.
+For example, in the computational fluid dynamics (CFD) community,
+one such computing paradigm is to promote high-order methods in which high arithmetic intensity is achieved
+by using an increasing number of higher-order terms.
+Due to its high availability in increasing the quality of numerical solutions with fewer grid points,
+high-order discrete methods for hyperbolic conservation laws have become primary themes in the CFD community.
+
+Under the dual computational need for accuracy and stability,
+the CFD community has developed high-order reconstruction and interpolation strategies
+that can achieve spatially high-order
+approximation.~\cite{woodward1984numerical,colella1984piecewise,liu1994weighted,jiang1996efficient,borges2008improved,castro2011high,mignone2010high,balsara2016efficient}
+However, efforts to achieve a high-order accuracy in the temporal axis have seen a renewed effort.
+For decades, multi-stage time integrators~\cite{gottlieb1998total,gottlieb2001strong,gottlieb2011strong}
+have been considered as the standard temporal integration strategy
+for an extensive range of high-order numerical schemes for partial differential equation (PDE) solvers.
+
+This dissertation develops a single-stage, high-order time integration scheme for hyperbolic PDEs.
+The core design concept is to achieve high-order accuracy within a single step
+to reduce computational costs for the overall numerical schemes.
+Another important objective for designing a high-order time integrator in this dissertation
+is to increase its portability.
+By designing a time integrator independent of the system of equations,
+one can provide increased flexibility and ease of code implementation.
+
+Consequently, a newly developed time integrator showed more than two times faster performance gain
+than the conventional multi-stage methods.
+Also, it can readily replace only the temporal part of any existing simulation code.
