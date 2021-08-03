@@ -1,10 +1,503 @@
 \chapter{System-Free Picard Integral Formulation}\label{chap:sfpif}
 
+Unlike the broad usage of SSP-RK in various discrete PDE solvers,
+the developments of ADER mentioned above have been exclusively applied to FV and DG methods, but FD methods.
+This is mainly because the fundamental principle of obtaining high-order accuracy
+in the original ADER scheme relies on solving generalized (or high-order) Riemann problems,
+which are the characteristic building blocks of FV and DG methods.
+
+Recently, Christlieb et al.\ introduced a new high-order temporal scheme for FDM,
+the so-called Picard integral formulation (PIF) method.~\cite{christlieb2015picard,seal2016explicit}
+The PIF discretization is based on the constructions of high-order approximation
+to the time-averaged fluxes over \( \left[ t^{n}, t^{n + 1} \right] \),
+allowing high-order temporal accuracy in a single-step update.
+Firstly introduced in~\cite{christlieb2015picard},
+the PIF method demonstrated third-order temporally accurate numerical fluxes
+by computing the coefficients of the time-Taylor expansion of the averaged fluxes
+via LW/CK procedure which converts the high-order temporal derivatives terms into the spatial derivatives.
+
+However, like many Lax-Wendroff type methods, the PIF method requires
+finding analytic derivations for flux Jacobians and Hessians.
+Although the Jacobian and the Hessian calculations can be easily obtained
+with the aid of symbolic manipulators such as \texttt{SymPy}, \texttt{Mathematica}, or \texttt{Maple},
+it still demands complicated coding/debugging efforts and ample memory consumption.
+Furthermore, as the Jacobian/Hessian calculations highly depend on the
+type of the governing system under consideration,
+it is required to re-derive the Jacobian/Hessian terms analytically every time
+we need to solve a new system, e.g., shallow water equations or magnetohydrodynamics (MHD) equations, to name a few.
+In addition, the calculation complexities of the Jacobian-like terms are drastically increasing
+with the number of spatial dimensions and the order of accuracy.
 
 
 
 \section{Picard Integral Formulation}\label{sec:pif}
+Applying the Picard integral formulation (PIF), the governing equations~\cref{eq:gov} can be discretized
+by taking a time average within a single time step \( \dt \) over an interval \( \left[ t^{n}, t^{n + 1} \right] \),
+\begin{equation}\label{eq:pif_time_avg}
+    \bU^{n + 1} = \bU^{n} - \dt \left( \partial_{x} \bF^{avg} + \partial_{y} \bG^{avg} + \partial_{z} \bH^{avg} \right),
+\end{equation}
+where \( \bF^{avg}, \bG^{avg}, \) and \( \bH^{avg} \) are the time-averaged fluxes in each direction,
+\begin{equation}\label{eq:pif_avg_flux}
+    \begin{split}
+        \bF^{avg} (\bx) = \frac{1}{\dt} \int_{t^{n}}^{t^{n + 1}} \bF (\bU(\bx, t)) \mathop{dt}, \\
+        \bG^{avg} (\bx) = \frac{1}{\dt} \int_{t^{n}}^{t^{n + 1}} \bG (\bU(\bx, t)) \mathop{dt}, \\
+        \bH^{avg} (\bx) = \frac{1}{\dt} \int_{t^{n}}^{t^{n + 1}} \bH (\bU(\bx, t)) \mathop{dt}, \\
+    \end{split}
+\end{equation}
+for \( \bx = (x, y, z) \in \mathbb{R}^{3} \).
+
+The goal is to express the spatial derivatives of the time-averaged fluxes in~\cref{eq:pif_time_avg}
+using highly approximated numerical fluxes \( \hat{\bff}, \hat{\bg}, \) and \( \hat{\bh} \)
+at cell interfaces:
+\begin{equation}\label{eq:pif_num_flux}
+    \begin{split}
+        \left. \partial_{x} \bF^{avg} \right|_{\bx = \bx_{ijk}} &=
+            \frac{1}{\dx} \left( \hat{\bff}_{\iph, j, k} - \hat{\bff}_{\imh, j, k} \right) + \mathcal{O} (\dx^{p} + \dt^{q}), \\
+        \left. \partial_{y} \bG^{avg} \right|_{\bx = \bx_{ijk}} &=
+            \frac{1}{\dy} \left( \hat{\bg}_{i, \jph, k} - \hat{\bg}_{i, \jmh, k} \right) + \mathcal{O} (\dy^{p} + \dt^{q}), \\
+        \left. \partial_{z} \bH^{avg} \right|_{\bx = \bx_{ijk}} &=
+            \frac{1}{\dz} \left( \hat{\bh}_{i, j, \kph} - \hat{\bh}_{i, j, \kmh} \right) + \mathcal{O} (\dz^{p} + \dt^{q}), \\
+    \end{split}
+\end{equation}
+where \( \bx_{ijk} = (x_{i}, y_{j}, z_{k}) \) is the discretization indices.
+
+The above equation is almost analog to~\cref{eq:fdm_flux_deriv},
+which is the conventional way to construct numerical fluxes for FDM through
+the high-order reconstruction schemes (\cref{eq:fdm_recon}).
+The only difference is to take time-averaged fluxes, \( \bF^{avg}, \bG^{avg}, \) and \( \bH^{avg} \)
+as an input of the reconstruction scheme rather than taking pointwise fluxes.
+Thus~\cref{eq:pif_num_flux} states that with highly approximated time-averaged fluxes,
+the resulting numerical fluxes from the conventional reconstruction schemes will be high-order in time and space.
+
+With PIF-numerical fluxes, the governing equation can be expressed in a fully discretized form as,
+\begin{equation}\label{eq:pif_full_discrete}
+    \begin{split}
+        \bU^{n + 1}_{i,j,k} = \bU^{n}_{i,j,k} &- \frac{\dt}{\dx} \left( \hat{\bff}_{\iph,j,k} - \hat{\bff}_{\imh,j,k} \right) \\
+                                              &- \frac{\dt}{\dy} \left( \hat{\bg}_{i, \jph, k} - \hat{\bg}_{i, \jmh, k} \right) \\
+                                              &- \frac{\dt}{\dz} \left( \hat{\bh}_{i, j, \kph} - \hat{\bh}_{i, j, \kmh} \right),
+    \end{split}
+\end{equation}
+which requires only a single update while attaining high-order accuracy both in time and space.
+
+It is worth remarking that the derived governing form in~\cref{eq:pif_full_discrete} for PIF
+is something in between those of FVM and FDM\@. It is different from that of FVM in that
+it does not carry any spatial average but the temporal average.
+It is also different from that of FDM in that it does involve the temporal average in the fluxes in~\cref{eq:pif_avg_flux},
+to which the numerical fluxes \( \hat{\bff}, \hat{\bg}, \) and \( \hat{\bh} \) approximate.
+
+The time-averaged fluxes
+are obtained through the Taylor expansion of the pointwise
+flux around \( t^{n} \).
+In the \( q \)th-order PIF method,
+the time-averaged \( x \)-directional flux \( \bF^{avg} \)
+is approximated as,
+\begin{equation}\label{eq:pif_flux_taylor}
+    \begin{split}
+        \bF^{avg} (\bx)
+        &= \frac{1}{\dt} \int^{t^{n + 1}}_{t^n} \bF(\bx, t) \mathop{dt}\\
+        &= \bF (\bx, t^{n})
+            + \left. \frac{\Delta t}{2!} \partial_{t}^{(1)} \bF (\bx, t) \right|_{t = t^{n}}
+            + \left. \frac{\Delta t^{2}}{3!} \partial_{t}^{(2)} \bF (\bx, t) \right|_{t = t^{n}}
+            + \left. \frac{\Delta t^{3}}{4!} \partial_{t}^{(3)} \bF (\bx, t) \right|_{t = t^{n}}
+            + \cdots \\
+        &= \sum\limits_{i=0}^{q-1}
+            \left.\frac{\dt^{i}}{(i+1)!} \partial_{t}^{(i)} \bF (\bx, t) \right|_{t = t^{n}} + \mathcal{O}(\Delta t^{q}) \\
+        &= \bF^{appx,q} (\bx, t^{n}) + \mathcal{O}(\Delta t^{q}).
+    \end{split}
+\end{equation}
+The \textit{temporally} \( q \)th-order approximated fluxes \( \bF^{appx, q} \)
+will be used
+as the inputs of the \( p\)th-order reconstruction scheme \( \mathcal{R}(\cdot) \)
+that is combined with a characteristic flux splitting method \( \mathcal{FS}(\cdot) \) 
+to apply the \( p \)th-order \textit{spatial} approximation to
+the numerical flux \( \hat{\bff} \) at cell interfaces,
+\begin{equation}\label{eq:num-flx}
+    \hat{\bff}_{i + \half, j, k} =
+        \mathcal{R}\left(
+            \mathcal{FS}\left(\bF^{appx, q}_{i-r, j}, \dots,
+                \bF^{appx, q}_{i+r+1, j}
+        \right)
+    \right)
+    + \mathcal{O}(\dx^{p}),
+\end{equation}
+where \( r \) represents the stencil radius
+required for the \( p \)th-order reconstruction method, \( \mathcal{R}(\cdot) \).
+The details of the high-order reconstruction methods, \( \mathcal{R}(\cdot) \), and
+the flux-splitting methods, \( \mathcal{FS}(\cdot) \) are described in~\cref{chap:high_order_methods}.
+
+Therefore, the primary objective of the PIF method is to approximate the time-averaged fluxes
+in the desired order \( q \), i.e., obtaining \( \bF^{appx, q} \).
+For instance, the fourth-order PIF method is characterized by
+the fourth-order approximated time-averaged flux in the \( x \)-direction, \( \bF^{appx,4} \),
+from the Taylor expansion of the pointwise flux around \( t^{n} \).
+As expressed in~\cref{eq:pif_flux_taylor}, the fourth-order PIF method requires
+\begin{equation}\label{eq:pif_flux_4order}
+\bF^{appx, 4} (\bx)
+    = \bF (\bx, t^{n})
+        + \left. \frac{\Delta t}{2!} \partial_{t}^{(1)} \bF (\bx, t) \right|_{t = t^{n}}
+        + \left. \frac{\Delta t^{2}}{3!} \partial_{t}^{(2)} \bF (\bx, t) \right|_{t = t^{n}}
+        + \left. \frac{\Delta t^{3}}{4!} \partial_{t}^{(3)} \bF (\bx, t) \right|_{t = t^{n}}.
+\end{equation}
+The other \( y \)- and \( z \)-directional approximated fluxes,
+\( \bG^{appx, 4} \) and \( \bH^{appx, 4} \),
+are defined in similarly.
+The only remaining task for the fouth-order PIF method (PIF4) is transforming all the
+time derivatives in~\cref{eq:pif_flux_4order} to the corresponding spatial derivatives
+via LW/CK procedures;
+thereby we could express~\cref{eq:pif_flux_4order} in a fully explicit form.
+
+For simplicity, the compact subscript notation of partial derivatives is adopted
+in the following discussions.
+The subscripts represent the partial derivatives,
+and the temporal expression of \( t = t^{n} \) is omitted.
+In the compact notation, \cref{eq:gov} can be rewritten as,
+\begin{equation}\label{eq:pif_gov_compact_notation}
+    \bU_{t} + \nabla \cdot \mathcal{F}(\bU) = \bU_{t} + \bF_{x} + \bG_{y} + \bH_{z} = 0.
+\end{equation}
+
+By applying the chain rule to \( \bF_{t} \),
+the evolution equation of the \( x \)-flux, \( \bF \) can be obtained as,
+\begin{equation}\label{eq:flux_eqn}
+    \bF_{t} = \bF_{\bU} \bU_{t},
+\end{equation}
+where \( \bF_{\bU} \) is the \( x \)-directional flux Jacobian matrix.
+The above equation can be combined with~\cref{eq:pif_gov_compact_notation},
+resulting the explicit expression for \( \bF_{t} \) as,
+\begin{equation}\label{eq:pif_Ft}
+    \bF_{t} = - \bF_{\bU} \Div, \quad \text{where } \Div = \bF_{x} + \bG_{y} + \bH_{z}
+\end{equation}
+The higher-order time derivatives could be achieved by taking partial derivatives to~\cref{eq:pif_Ft} recursively.
+As an example, the second-order term is written as
+\begin{equation}\label{eq:pif_Ftt}
+    \bF_{tt} = \bF_{\bU \bU} \cdot \Div \cdot \Div - \bF_{\bU} \cdot \Div_{t},
+\end{equation}
+where
+\begin{equation}\label{eq:pif_divt}
+    \begin{split}
+        \Div_{t} =
+            &-\bF_{\bU \bU} \cdot \bU_{x} \cdot \Div - \bF_{\bU} \cdot \Div_{x} \\
+            &-\bG_{\bU \bU} \cdot \bU_{y} \cdot \Div - \bG_{\bU} \cdot \Div_{y} \\
+            &-\bH_{\bU \bU} \cdot \bU_{z} \cdot \Div - \bH_{\bU} \cdot \Div_{z},
+    \end{split}
+\end{equation}
+and \( \bF_{\bU\bU} \) is the \( x \)-directional flux Hessian tensor.
+In Euler equations, the flux Hessians, \( \bF_{\bU\bU}, \bG_{\bU\bU}, \) and \( \bH_{\bU\bU} \)
+are the symmetric, rank-3 tensors, so a dot product between the Hessian tensor and a vector
+is to be understood as a tensor contraction.
+Thus a double dot product between the Hessian tensor and two vectors,
+i.e., \( \bF_{\bU \bU} \cdot (\;) \cdot (\;) \) yields a vector of the same dimension with \( \bU \).
+
+Following the same procedure,
+an explicit form of the third-order time derivative of the flux
+can be obtained as,
+\begin{equation}\label{eq:pif_Fttt}
+    \bF_{ttt} = -\bF_{\bU \bU \bU} \cdot \Div \cdot \Div \cdot \Div
+    + 3 \bF_{\bU \bU} \cdot \Div \cdot \Div_{t}
+    - \bF_{\bU} \cdot \Div_{tt},
+\end{equation}
+where
+\begin{equation}\label{eq:pif_divtt}
+    \begin{split}
+        \Div_{tt} = \quad & \bF_{\bU \bU \bU} \cdot \Div \cdot \bU_{x} \cdot \Div + 2 \bF_{\bU \bU} \cdot \Div \cdot \Div_{x} - \bF_{\bU \bU} \cdot \bU_{x} \cdot \Div_{t} - \bF_{\bU} \cdot \Div_{tx} \\
+            + & \bG_{\bU \bU \bU} \cdot \Div \cdot \bU_{y} \cdot \Div + 2 \bG_{\bU \bU} \cdot \Div \cdot \Div_{y} - \bG_{\bU \bU} \cdot \bU_{y} \cdot \Div_{t} - \bG_{\bU} \cdot \Div_{ty} \\
+            + & \bH_{\bU \bU \bU} \cdot \Div \cdot \bU_{z} \cdot \Div + 2 \bH_{\bU \bU} \cdot \Div \cdot \Div_{z} - \bH_{\bU \bU} \cdot \bU_{z} \cdot \Div_{t} - \bH_{\bU} \cdot \Div_{tz},
+    \end{split}
+\end{equation}
+and
+\begin{equation}\label{eq:pif_divtx}
+    \begin{split}
+        \Div_{tx} = \quad & \bF_{\bU \bU \bU} \cdot \bU_{x} \cdot \Div \cdot \bU_{x} - \bF_{\bU \bU} \cdot \bU_{xx} \cdot \Div
+        -2\bF_{\bU \bU} \cdot \Div_{x} \cdot \bU_{x} - \bF_{\bU} \cdot \Div_{xx} \\
+            - & \bG_{\bU \bU \bU} \cdot \bU_{x} \cdot \Div \cdot \bU_{y} - \bG_{\bU \bU} \cdot \bU_{xy} \cdot \Div - \bG_{\bU \bU} \cdot \Div_{x} \cdot \bU_{y} \\
+            - & \bG_{\bU \bU} \cdot \bU_{x} \cdot \Div_{y} - \bG_{\bU} \cdot \Div_{xy} \\
+            - & \bH_{\bU \bU \bU} \cdot \bU_{x} \cdot \Div \cdot \bU_{z} - \bH_{\bU \bU} \cdot \bU_{xz} \cdot \Div - \bH_{\bU \bU} \cdot \Div_{x} \cdot \bU_{z} \\
+            - & \bH_{\bU \bU} \cdot \bU_{x} \cdot \Div_{z} - \bH_{\bU} \cdot \Div_{xz},
+    \end{split}
+\end{equation}
+and similarly for \( \Div_{ty} \) and \( \Div_{tz} \).
+
+Collecting~\crefrange{eq:pif_Ft}{eq:pif_divtx} the fourth-order approximation of the time-averaged \( x \)-flux,
+\( \bF^{appx, 4} \) can be expressed in the explicit form, as the spatial derivatives
+are readily approximated through the conventional central differencing schemes.
+In this dissertation, the conventional five-point central differencing formulae are used:
+\begin{equation}\label{eq:pif_central_dfdx}
+    \left. \bF_{x} \right|_{\bx = \bx_{ijk}} = \frac{\bF_{i-2} - 8 \bF_{i-1} + 8 \bF_{i+1} - \bF_{i+2} }{12\dx} + \mathcal{O}(\dx^{4}),
+\end{equation}
+\begin{equation}\label{eq:pif_central_dfdxx}
+    \left. \bF_{xx} \right|_{\bx = \bx_{ijk}} = \frac{-\bF_{i-2} + 16 \bF_{i-1} - 30 \bF_{i} + 16 \bF_{i+1} - \bF_{i+2} }{12\dx^{2}} + \mathcal{O}(\dx^{4}).
+\end{equation}
+For the cross derivatives,
+\begin{equation}\label{eq:pif_central_dfdxy}
+    \left. \bF_{xy} \right |_{\bx = \bx_{ijk}} =
+    \frac{\bF_{i+1, j+1} - \bF_{i-1, j+1} - \bF_{i+1, j-1} + \bF_{i-1 j-1}}{4\dx\dy} + \mathcal{O}(\dx^{2}, \dy^{2}).
+\end{equation}
+
+In practical code implementation, reusing the flux divergence \( \Div \)
+for calculating high-order spatial derivatives is more efficient than calculating them directly.
+For example, \( \Div_{x} \) can be calculated as \( \texttt{dx}(\Div) \),
+with the numerical spatial derivative function \( \texttt{dx}(\cdot) \),
+rather than calculating as \( \Div_{x} = \bF_{xx} + \bG_{yx}+ \bH_{zx} \).
+This approach requires an additional guard cell layer
+(resulting in two more guard cells for the five-points derivatives).
+However, the overall code performance is better than
+evaluating high-order derivatives in each direction without affecting the accuracy of the scheme.
+
+The PIF method is a very efficient numerical strategy to update the solution in FDM formulation.
+Once the high-order time-averaged fluxes are determined, the solution can be updated
+through a single step by following the exact same process for the conventional FDM spatial reconstruction.
+Using the conventional spatial strategy of the FDM formulation,
+the PIF method can be ``swapped'' readily with the SSP-RK scheme
+in the existing simulation code for improving the code performance.
+
+However, the direct analytic derivations for flux Jacobians, Hessians (and more)
+remain as the implementation hurdle for the PIF method.
+Unlike SSP-RK methods, the PIF method requires different code implementation
+for a different system of equations only because of the \textit{Jacobian-like} terms. (e.g., \( \bF_{\bU}, \bF_{\bU\bU}, \bF_{\bU\bU\bU}, \dots \))
+This dissertation aims to tackle this problem,
+making a different strategy to use the LW/CK procedure,
+which does not require analytical derivations of \textit{Jacobian-like} terms.
+
+
 
 \section{System-Free Approach}\label{sec:original_sf}
+
+This section aims to provide a new alternate formulation of computing
+the multiplications of Jacobian-vector and Hessian-vector-vector terms in~\crefrange{eq:pif_Ft}{eq:pif_divtx}.
+The new approach will replace the necessity for analytical derivations
+of the Jacobian-like terms in the original PIF method that is system-dependent,
+with a new system-independent formulation, based on the so-called ``Jacobian-free'' method,
+which is widely used for Newton-Krylov-type
+iterative schemes~\cite{gear1983iterative,brown1990hybrid,knoll2004jacobian,knoll2011application}.
+
+Suppose the Taylor expansion for the flux vector \( \bF \) at a small displacement from \( \bU \),
+\begin{subequations}\label{eq:sf_FeV}
+    \begin{align}
+        \label{eq:sf_FeV_right}\bF ( \bU + \varepsilon \bV) =
+        \bF(\bU) + \varepsilon \bF_{\bU} \cdot \bV +
+        \frac{1}{2} \varepsilon^{2} \bF_{\bU\bU} \cdot \bV \cdot \bV + \mathcal{O}(\varepsilon^{3}), \\
+        \label{eq:sf_FeV_left}\bF ( \bU - \varepsilon \bV) =
+        \bF(\bU) - \varepsilon \bF_{\bU} \cdot \bV +
+        \frac{1}{2} \varepsilon^{2} \bF_{\bU\bU} \cdot \bV \cdot \bV + \mathcal{O}(\varepsilon^{3}),
+    \end{align}
+\end{subequations}
+where \( \bV \) is an arbitrary vector that has
+the same number of components as \( \bU \), and \( \varepsilon \) is a
+small scalar perturbation.
+By subtracting \cref{eq:sf_FeV_left} from \cref{eq:sf_FeV_right},
+we get an expression of a central differencing that is of second-order in $\varepsilon$,
+\begin{equation}\label{eq:sf_jac_free}
+    \bF_{\bU} \cdot \bV = \frac{1}{2\varepsilon}
+    \bigg[ \bF(\bU + \varepsilon \bV) -\bF(\bU - \varepsilon \bV) \bigg]
+    + \mathcal{O} ( \varepsilon^{2} ).
+\end{equation}
+Alternatively, the first-order forward differencing or the backward differencing can be used here.
+However, the above second-order central differencing is used for this dissertation,
+so that the order of accuracy of the entire system-free approach consistently scales with \( \mathcal{O}(\varepsilon^{2}) \),
+given that the Hessian approximation described in the following is to be bounded by \( \mathcal{O}(\varepsilon^{2}) \).
+With the system-free approximation of Jacobian, all the Jacobian-vector products in \crefrange{eq:pif_Ft}{eq:pif_divtx}
+are to be replaced with the central differencing in \cref{eq:sf_jac_free}.
+
+For the approximation for Hessians, it is imperative to classify
+the types of the Hessian tensor contraction.
+The first type is the Hessian tensor contracts with the same vector twice, e.g., \( \bF_{\bU\bU} \cdot \bV \cdot \bV \),
+and the second type is the tensor contracts with
+two different vectors, e.g., \( \bF_{\bU\bU} \cdot \bV \cdot \bW \).
+
+For the first type, we use a Taylor expansion analogous to \cref{eq:sf_FeV}
+to approximate the Hessian-vector-vector product with
+a central differencing of order \( \mathcal{O}(\varepsilon^{2}) \),
+\begin{equation}\label{eq:sf_hes_free_vv}
+    \bF_{\bU \bU} \cdot \bV \cdot \bV = \frac{1}{\varepsilon^{2}}
+    \bigg[ \bF(\bU + \varepsilon \bV) -2\bF(\bU) -\bF(\bU - \varepsilon \bV) \bigg]
+    + \mathcal{O} ( \varepsilon^{2} ).
+\end{equation}
+Using a simple vector calculus,
+the second type can be derived from the first type in \cref{eq:sf_hes_free_vv}
+by exploring a symmetric property of the Hessians,
+\begin{equation}\label{eq:sf_hes_free_vw}
+        \bF_{\bU \bU} \cdot \bV \cdot \bW = \frac{1}{2}
+    \bigg[ \bF_{\bU \bU} \cdot \left( \bV + \bW \right) \cdot \left( \bV + \bW \right) -
+          \left( \bF_{\bU \bU} \cdot \bV \cdot \bV + \bF_{\bU \bU} \cdot \bW \cdot \bW \right) \bigg].
+\end{equation}
+The Hessian approximations derived here are now ready to be substituted
+in \crefrange{eq:pif_Ftt}{eq:pif_divtx}.
+
+Theoretically speaking, the system-free procedure in the above
+can be applied to any arbitrary order of derivatives of the flux function \( \bF \)
+with respect to the conservative variable \( \bU \). For instance,
+the fourth-order PIF method~\cref{eq:pif_flux_4order}
+requires the third-order derivative of \( \bF \), i.e., \( \bF_{\bU\bU\bU} \).
+Following the same mathematical basis of \cref{eq:sf_jac_free,eq:sf_hes_free_vv},
+the tensor contractions with the same vectors can be approximated as,
+\begin{equation}\label{eq:orig-sf-don}
+    \begin{split}
+        \bF_{\bU \bU \bU} \cdot \bV \cdot \bV \cdot \bV = \frac{1}{2 \varepsilon^{3}}
+        \bigg[& -\bF(\bU - 2 \varepsilon \bV) + 2\bF(\bU - \varepsilon \bV) \\
+              & - 2\bF(\bU + \varepsilon \bV)+ \bF(\bU + 2 \varepsilon \bV)
+        \bigg] + \mathcal{O} ( \varepsilon^{2} ).
+    \end{split}
+\end{equation}
+We can further extend the procedure to compute the contraction
+with three different vectors, \( \bV, \bW \), and \( \bX \),
+\begin{equation}\label{eq:orig-sf-don-vec}
+    \begin{split}
+        \bF_{\bU \bU \bU} \cdot \bV \cdot \bW \cdot \bX = \frac{1}{6} \bigg[
+            &\bF_{\bU \bU \bU} \cdot \left( \bV + \bW + \bX \right) \cdot \left( \bV + \bW + \bX \right) \cdot \left( \bV + \bW + \bX \right) \\
+            & -\bF_{\bU \bU \bU} \cdot \left( \bV + \bW \right) \cdot \left( \bV + \bW \right) \cdot \left( \bV + \bW \right) \\
+            & -\bF_{\bU \bU \bU} \cdot \left( \bV + \bX \right) \cdot \left( \bV + \bX \right) \cdot \left( \bV + \bX \right) \\
+            & -\bF_{\bU \bU \bU} \cdot \left( \bW + \bX \right) \cdot \left( \bW + \bX \right) \cdot \left( \bW + \bX \right) \\
+            & + \bF_{\bU \bU \bU} \cdot \bV \cdot \bV \cdot \bV \\
+            & + \bF_{\bU \bU \bU} \cdot \bW \cdot \bW \cdot \bW \\
+            & + \bF_{\bU \bU \bU} \cdot \bX \cdot \bX \cdot \bX
+        \bigg],
+    \end{split}
+\end{equation}
+and only to see that the number of terms to be computed 
+rapidly increases in high-order tensor contraction terms.
+
+
+
+
+\subsection{The proper choices of \( \varepsilon \)}
+
+In the above system-free approximations, the choice of \( \varepsilon \) has to be considered carefully
+as it affects the solution accuracy and stability.
+On one hand, \( \varepsilon \) is needed to be minimized to improve
+the approximated solution accuracy,
+the quality of which will scale as the truncation error of \( \mathcal{O}(\varepsilon^{2}) \).
+On the other hand, if it is too small the solution would be contaminated
+by the floating-point roundoff error which is bounded by
+the machine accuracy \( \varepsilon_{\text{mach}} \)~\cite{knoll2004jacobian}.
+Therefore, $\varepsilon$ is to be determined judiciously
+to provide a good balance between the two types of error.
+
+A recent study by An et al.~\cite{an2011finite}
+presents an effective analysis of choosing
+\( \varepsilon \) in the context of the Jacobian-free Newton-Krylov iterative framework.
+The authors have shown how to compute an ideal value of
+\( \varepsilon \) which minimizes the error of the
+central differencing in the Jacobian-vector approximation.
+
+The main idea in~\cite{an2011finite} is to find a good
+balance between the truncation error \( \mathcal{O}(\varepsilon^{2}) \)
+of each Jacobian-free approximation in~\cref{eq:sf_jac_free}
+and Hessian-free approximation in~\cref{eq:sf_hes_free_vv},
+and the intrinsic floating-point roundoff error $\delta\bF(\bU)$ when calculating
+the target exact function value $\bF(\bU)$ with
+an approximate value $\bF(\bU) + \delta\bF(\bU)$.
+The perturbation $\delta\bF(\bU)$ may include any errors characterized
+in computer arithmetic such as roundoff errors, and is assumed to be
+bounded by the machine accuracy.
+
+Let $\bF(\bU)$ be an exact function value of $\bF$ at $\bU$, and let
+$\bF^{*}(\bU) = \bF(\bU) + \delta \bF(\bU)$ be
+an approximation to $\bF(\bU)$,
+where $\delta \bF(\bU)$ is a perturbation of
+$\bF(\bU)$ that is potentially due from roundoff errors and truncation errors
+and is assumed to be bounded by the machine accuracy, i.e.,
+$|| \delta\bF(\bU) || \le \varepsilon_{\text{mach}}$.
+The main idea is to choose an optimal \( \varepsilon \) value
+for the Jacobian-free approximation~\cref{eq:sf_jac_free},
+$\varepsilon_{\text{jac}}^{op}$, in such a way that
+the error is minimized
+when approximating $\bF_{\bU} \cdot \bV$ using
+the central differencing approximation of $\bF^{*}(\bU)$
+in \cref{eq:sf_jac_free}, i.e.,
+\begin{equation}\label{eq:sf_epsilon_jac_free}
+    \begin{split}
+        \bF_{\bU} \cdot \bV &\approx \frac{1}{2 \sigma} \big[ \bF^{*}(\bU + \sigma \bV) - \bF^{*}(\bU - \sigma \bV) \big] \\
+            & = \frac{1}{2 \sigma} \big[ \bF(\bU + \sigma \bV) + \delta \bF(\bU + \sigma \bV)
+            -\bF(\bU - \sigma \bV)  - \delta \bF(\bU - \sigma \bV) \big].
+    \end{split}
+\end{equation}
+For the sake of this analysis, we assume that the function
+$\bF:\mathbb{R}^n \to \mathbb{R}^n$ is defined to be continuously differentiable sufficiently everywhere,
+ $\bF \in C^k(\mathbb{R}^n)$.
+We now define the error $E$ by the difference between the central differencing approximation 
+in~\cref{eq:sf_epsilon_jac_free} and $\bF_{\bU} \cdot \bV$,
+\begin{equation} \label{eq:sf_epsilon_jac_free_error}
+    \begin{split}
+        E &= \frac{1}{2 \sigma} \big[ \bF^{*}(\bU + \sigma \bV) - \bF^{*}(\bU - \sigma \bV) \big]
+            - \bF_{\bU} \cdot \bV \\
+          &= \frac{1}{2 \sigma} \big[ \bF(\bU + \sigma \bV) - \bF(\bU - \sigma \bV) \big] +
+          \frac{1}{2 \sigma} \big[ \delta \bF(\bU + \sigma \bV) - \delta \bF(\bU - \sigma \bV) \big] -
+            \bF_{\bU} \cdot \bV \\
+        &= \frac{1}{2 \sigma} \left[
+            2 \sigma \bF_{\bU} \cdot \bV +
+            \sigma^{3} \int_{0}^{1} \left( 1 - t \right)^{2}  \bF^{(3)} (\bU + t \sigma \bV) \cdot \bV^{3} \mathop{dt}
+        \right] \\
+        &\qquad + \frac{1}{2 \sigma} \big[ \delta \bF(\bU + \sigma \bV) - \delta \bF(\bU - \sigma \bV) \big] -
+            \bF_{\bU} \cdot \bV \\
+        &= \mathcal{O}\biggl(\frac{\sigma^2}{2} + \frac{\varepsilon_{\text{mach}}}{2\sigma} \biggr),
+    \end{split}
+\end{equation}
+where the Taylor series expansion around $\bU$ is used for each term
+in which the remainders after the third power are given
+as the integral form as below,
+\begin{equation}\label{eq:sf_epsilon_jac_free_taylor}
+    \begin{split}
+        \bF(\bU + \sigma \bV) & = \bF(\bU) + \sigma \bF_{\bU} \cdot \bV + \frac{\sigma^{2}}{2} \pdd{\bF}{\bU} \cdot \bV \cdot \bV \\
+                              & \qquad + \frac{\sigma^{3}}{2} \int_{0}^{1} \left( 1 - t \right)^{2} \bF^{(3)} (\bU + t \sigma \bV) \cdot \bV^{3} \mathop{dt}, \\
+        \bF(\bU - \sigma \bV) & = \bF(\bU) - \sigma \bF_{\bU} \cdot \bV + \frac{\sigma^{2}}{2} \pdd{\bF}{\bU} \cdot \bV \cdot \bV \\
+                              & \qquad - \frac{\sigma^{3}}{2} \int_{0}^{1} \left( 1 - t \right)^{2} \bF^{(3)} (\bU + t \sigma \bV) \cdot \bV^{3} \mathop{dt}. \\
+    \end{split}
+\end{equation}
+The optimal choice of \( \varepsilon_{\text{jac}}^{op} \) is to be obtained
+by considering the minimization problem of the leading error term in the
+last line in~\cref{eq:sf_epsilon_jac_free_error},
+\begin{equation}\label{eq:sf_epsilon_jac_optimal}
+    \varepsilon^{op}_{\text{jac}} = \argmin_{\sigma > 0}
+        \left( \frac{\sigma^{2}}{2} + \frac{\varepsilon_{\text{mach}}}{2 \sigma} \right) =
+        {\left( \frac{\varepsilon_{\text{mach}}}{2} \right)}^{\frac{1}{3}} \approx \num{4.8062e-06},
+\end{equation}
+where \( \varepsilon_{\text{mach}} \sim \num{2.2204E-16} \) is used
+assuming a double-precision in a typical 64-bit machine.
+
+Following the similar procedures, the optimal epsilon value for
+the Hessian-free approximation~\cref{eq:sf_hes_free_vv}, \( \varepsilon_{\text{hes}}^{op} \)
+can be found as,
+\begin{equation}\label{eq:sf_epsilon_hes_optimal}
+    \varepsilon^{op}_{\text{hes}} = \argmin_{\sigma > 0}
+        \left( \frac{\sigma^{2}}{3} + \frac{\varepsilon_{\text{mach}}}{\sigma^{2}} \right) =
+        {\left( 3 \varepsilon_{\text{mach}} \right)}^{\frac{1}{4}} \approx \num{1.6065e-04}.
+\end{equation}
+
+However, direct use of \( \varepsilon^{op} \) as
+the displacement step size in the central differencing schemes
+in \cref{eq:sf_jac_free} and \cref{eq:sf_hes_free_vv}
+is not a good idea for stability reasons.
+%
+Usually, the vector \( \bV \) in
+\cref{eq:sf_jac_free} and \cref{eq:sf_hes_free_vv} could have an
+enormous value in a strong shock region, so it is safer to use
+a smaller step size to preserve the needed stability. To meet this,
+the ideal value, \( \varepsilon^{op} \) should be normalized
+by the magnitude of the vector \( \bV \).
+%
+There are several prescriptions available
+in the Jacobian-free Newton–Krylov 
+literatures~\cite{knoll2004jacobian, brown1990hybrid}
+to help finalize the decision of choosing a proper value of \( \varepsilon \)
+as a function of  \( \varepsilon^{op} \).
+%
+Nonetheless, as reported in~\cite{lee2021single},
+a simple approach of
+taking a square root of \( \varepsilon^{op} \)
+with a simple normalization is sufficient to attain the desired accuracy and stability,
+which is given as,
+%
+\begin{equation}\label{eq:sf_epsilon_norm}
+    \overline{\varepsilon} = \frac{\sqrt{\varepsilon^{op}}}{\left\lVert \bV \right\rVert_{2}}.
+\end{equation}
+
+Lastly,
+the \( \varepsilon \) estimation can be finalized
+by taking the minimum value between $\overline{\varepsilon}$ and $\dt$,
+%
+\begin{equation}\label{eq:sf_epsilon_min_dt}
+    \varepsilon = \min \left( \overline{\varepsilon}, \; \dt  \right),
+\end{equation}
+to prevent the division by zero case.
+
 
 \section{Recursive System-Free Approach}\label{sec:recursive_sf}
