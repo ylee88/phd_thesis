@@ -69,9 +69,13 @@
 \newcommand{\dz}{\Delta z}
 
 % partial derivatives!
-\newcommand{\pd}[2]{\frac{\partial #1}{\partial #2}}
-\newcommand{\pdd}[2]{\frac{\partial^{2} #1}{\partial #2^{2}}}
-\newcommand{\pddd}[2]{\frac{\partial^{3} #1}{\partial #2^{3}}}
+% \newcommand{\pd}[2]{\frac{\partial #1}{\partial #2}}
+% \newcommand{\pdd}[2]{\frac{\partial^{2} #1}{\partial #2^{2}}}
+% \newcommand{\pddd}[2]{\frac{\partial^{3} #1}{\partial #2^{3}}}
+
+\newcommand{\pd}[2]{\partial_{#2} #1}
+\newcommand{\pdd}[2]{\partial^{2}_{#2} #1}
+\newcommand{\pddd}[2]{\partial^{3}_{#2} #1}
 
 % vector is bold
 \renewcommand{\vec}[1]{\mathbf{#1}}

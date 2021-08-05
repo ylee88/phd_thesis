@@ -84,7 +84,7 @@ for achieving high-order in time accuracy for FDM formulation.
 The high-order reconstruction schemes play a pivotal role in reducing numerical errors
 on the \textit{spatial axis} for solving discrete PDEs under FVM and FDM formulations.
 The reconstruction schemes furnish a pointwise representation of the given volume-averaged data;
-thus, they are suitable for estimating volume-averaged conserved variables (FVM) or
+thus, they are suitable for estimating pointwise values with given volume-averaged conserved variables (FVM) or
 volume-averaged auxiliary functions (FDM).
 Modern practitioners in the CFD community have focused on designing high-order reconstruction schemes
 that can generate highly accurate solutions while maintaining numerical stability at discontinuous regions.
@@ -96,7 +96,7 @@ In the finite difference method, the numerical fluxes can be estimated through r
 by inputting the pointwise physical fluxes at the cell centers.
 Assuming that a \( p \)-th order reconstruction scheme, \( \mathcal{R}(\cdot) \), taking the \( 2r \) length of stencil
 centered at cell \( I_{i} \), and generating estimated pointwise value at \( x = x_{\iph} \),
-then the FDM numerical flux at \( x = x_{\iph}, \hat{\bff}_{\iph} \) can be found by,
+then the FDM numerical flux \( \hat{\bff}_{\iph} \) at \( x = x_{\iph} \) can be found by,
 \begin{equation}\label{eq:fdm_recon_1d}
     \hat{\bff}_{\iph} = \mathcal{R}(\bF_{i-r}, \dots, \bF_{i+r}) + \mathcal{O}(\dx^{p}).
 \end{equation}
@@ -114,7 +114,7 @@ For example, one can split the flux function into two parts:
 where \( \alpha^{k} \) is the global maximum characteristic speed of \( k \)-th characteristic field,
 i.e., the maximum absolute value of \( k \)-th eigenvalue of flux Jacobian \( \pd{\bF}{\bU} \) over the whole domain.
 This procedure is called the global Lax–Friedrichs flux splitting~\cite{jiang1996efficient}
-since we take global maximum for each \( \alpha \).
+since we take global maximum for each \( \alpha^{k} \).
 The reconstruction method is applied to the positive and negative parts of the fluxes \( \bF^{\pm}_{i} \)
 to construct numerical fluxes, and then they are collected at each interface:
 \begin{equation}\label{eq:lf_splitting_combine}
@@ -137,7 +137,7 @@ to the left- and the right-going parts according to the characteristic decomposi
         \bR_{\iph} \mathbf{\Lambda}_{\iph} \bL_{\iph}, \quad
         \bU_{\iph} = \frac{\bU_{i} + \bU_{i+1}}{2},
 \end{equation}
-where \( \bR \) and \( \bL \) are the corresponding matrices of right and left eigenvectors,
+where \( \bR \) and \( \bL \) are the matrices of right and left eigenvectors,
 and \( \mathbf{\Lambda} \) is the diagonal matrix whose diagonal entries are corresponding eigenvalues.
 The projection proceeds to construct \( s \) different left-going (\( - \)) and right-going (\( + \)) characteristic
 states of the pointwise fluxes, denoted as \( \bV^{k, \pm}_{(i+\half):{s}} \)
@@ -285,7 +285,6 @@ As illustrated in the figure, the nonlinear weights successfully detect the shar
 and weighting on \( p_{3} (x) \) dominantly to avoid reconstruction on the discontinuity.
 
 
-%\subsection{Nested Multi-Resolution WENO Method}\label{subsec:nestedweno}
 
 \subsection{Gaussian Process Reconstruction}\label{subsec:gp}
 
@@ -819,8 +818,8 @@ For example, by far the most optimal fourth-order, fourth-stage SSP-RK method is
 Note that the above four-stage, fourth-order SSP-RK method uses the adjoint spatial operator, \( \tilde{\mathcal{L}} \),
 to bear the negative coefficients, e.g., \( -\frac{10890423}{25193600} \) and \( -\frac{102261}{5000000} \).
 Numerically speaking, the only difference between \( \mathcal{L} \) and \( \tilde{\mathcal{L}} \)
-is the direction of the upwind. Although the computational cost of calculating \( \mathcal{L}(\bU) \) and
-\( \tilde{\mathcal{L}}(\bU) \) are identical, but it demands separated codes.
+is the direction of the upwind limiting. Although the computational cost of calculating \( \mathcal{L}(\bU) \) and
+\( \tilde{\mathcal{L}}(\bU) \) are identical, but it demands separated codes, and leads implementation complexity.
 
 Spiteri and Ruuth~\cite{spiteri2002new} proposed a five-stage, fourth-order SSP-RK4 method that does not require to use adjoint operator:
 \begin{equation}\label{eq:ssp_rk4}
@@ -862,16 +861,16 @@ In one-dimensional conservative PDEs, for example,
     \begin{split}
         \pd{\bU}{t} &= -\pd{\bF}{x}, \\
         \pdd{\bU}{t} &= \pd{}{t} \left( -\pd{\bF}{x}\right) \\
-                     &= -\pd{}{x} \left( \pd{\bF}{\bU} \pd{\bU}{t} \right) \\
-                     &= \pd{}{x} \left( \pd{\bF}{\bU} \pd{\bF}{x} \right),
+                     &= -\pd{}{x} \left( \pd{\bF}{\bU} \cdot \pd{\bU}{t} \right) \\
+                     &= \pd{}{x} \left( \pd{\bF}{\bU} \cdot \pd{\bF}{x} \right),
     \end{split}
 \end{equation}
 where \( \pd{\bF}{\bU} \) is a flux Jacobian matrix.
-In the original Lax-Wendroff method~\cite{lax1959systems} used an approximation of \( \pd{}{x} \left( \pd{\bF}{\bU} \pd{\bF}{x} \right) \approx
-\left.\pd{\bF}{\bU} \right|_{\iph} \pd{\bF}{x} - \left.\pd{\bF}{\bU} \right|_{\imh} \pd{\bF}{x} \),
+In the original Lax-Wendroff method~\cite{lax1959systems} used an approximation of \( \pd{}{x} \left( \pd{\bF}{\bU} \cdot \pd{\bF}{x} \right) \approx
+\frac{1}{\dx}\left( \left.\pd{\bF}{\bU} \right|_{\iph} \cdot \pd{\bF}{x} - \left.\pd{\bF}{\bU} \right|_{\imh} \cdot \pd{\bF}{x} \right) \),
 but it is possible to get an explicit form as,
 \begin{equation}\label{}
-    \pdd{\bU}{t} = \pd{}{x} \left( \pd{\bF}{\bU} \pd{\bF}{x} \right) = \pdd{\bF}{\bU} \pd{\bF}{x} + \pd{\bF}{\bU} \pdd{\bF}{x},
+    \pdd{\bU}{t} = \pd{}{x} \left( \pd{\bF}{\bU} \cdot \pd{\bF}{x} \right) = \pdd{\bF}{\bU} \cdot \pd{\bF}{x} + \pd{\bF}{\bU} \cdot \pdd{\bF}{x},
 \end{equation}
 with flux Hessian tensor, \( \pdd{\bF}{\bU} \).
 
@@ -880,8 +879,6 @@ it can achieve a high order in time accuracy within a single step of the calcula
 The idea to construct the time-Taylor series by harnessing the tight coupling of temporal
 and spatial derivatives through LW/CK procedures inspires many practitioners
 to develop single-step, high-order methods based on the Lax-Wendroff method.
-
-\noter{rephrase below}
 
 In 2001, Toro et al.~\cite{toro2001towards} extended this idea
 by combining it with the generalized Riemann problems (GRPs)

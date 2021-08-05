@@ -1,1 +1,31 @@
 \chapter{Results}\label{ch:results}
+
+This chapter will provide various numerical test results of SF-PIF methods.
+In order to examine the numerical capabilities of the SF method,
+several well-known numerical benchmark problems are conducted,
+and the traditional SSP-RK methods' results will be provided with the same initial conditions
+as counterparts of SF-PIF methods for comparisons.
+SF-PIF3 and SF-PIF4 will refer to the \textit{recursive} SF method in~\cref{sec:recursive_sf}
+with third-order and fourth-order PIF methods, respectively,
+and RK3 and RK4 will refer to the three-stage, third-order SSP-RK method~\cref{eq:ssp_rk3},
+five-stage, fourth-order SSP-RK method~\cref{eq:ssp_rk4}, respectively.
+The original SF approach (\cref{sec:original_sf}) with the PIF method is denoted by oSF-PIF\@.
+
+\section{Performance of SF-PIF method}\label{sec:result_performance}
+The main advantage of the PIF method is the performance gain compared to the SSP-RK methods.
+This section will compare the performance of PIF methods (with or without the SF approach)
+and the SSP-RK method. The main purpose of this section is to check if the SF-PIF methods provide
+improved performance while maintaining the same accuracy as SSP-RK methods.
+Theoretically speaking, the SF and oSF approach should not affect the solution's accuracy and stability,
+so the original PIF method's results are presented for comparisons.
+
+All test results in this section use the standard fifth-order WENO-JS method (\cref{subsec:weno})
+for the spatially high-order reconstruction scheme.
+Therefore, the expected truncation error is \( \mathcal{O}(\Delta s^{5}, \dt^{q}) \),
+where \( q \) is the order of the temporal scheme.
+
+\section{SF-PIF method with GP-WENO}\label{sec:result_gpweno}
+
+\subsection{Hyperparameters}\label{subsec:result_gp_hyper_params}
+
+\section{SF-PIF method with WENO-JS}\label{sec:result_wenojs}

@@ -232,6 +232,8 @@ For the cross derivatives,
     \frac{\bF_{i+1, j+1} - \bF_{i-1, j+1} - \bF_{i+1, j-1} + \bF_{i-1 j-1}}{4\dx\dy} + \mathcal{O}(\dx^{2}, \dy^{2}).
 \end{equation}
 
+\noter{WENO-weighted finite difference operators should be introduced here.}
+
 In practical code implementation, reusing the flux divergence \( \Div \)
 for calculating high-order spatial derivatives is more efficient than calculating them directly.
 For example, \( \Div_{x} \) can be calculated as \( \texttt{dx}(\Div) \),
@@ -329,7 +331,7 @@ the fourth-order PIF method~\cref{eq:pif_flux_4order}
 requires the third-order derivative of \( \bF \), i.e., \( \bF_{\bU\bU\bU} \).
 Following the same mathematical basis of \cref{eq:sf_jac_free,eq:sf_hes_free_vv},
 the tensor contractions with the same vectors can be approximated as,
-\begin{equation}\label{eq:orig-sf-don}
+\begin{equation}\label{eq:sf_don_free_vvv}
     \begin{split}
         \bF_{\bU \bU \bU} \cdot \bV \cdot \bV \cdot \bV = \frac{1}{2 \varepsilon^{3}}
         \bigg[& -\bF(\bU - 2 \varepsilon \bV) + 2\bF(\bU - \varepsilon \bV) \\
@@ -339,7 +341,7 @@ the tensor contractions with the same vectors can be approximated as,
 \end{equation}
 We can further extend the procedure to compute the contraction
 with three different vectors, \( \bV, \bW \), and \( \bX \),
-\begin{equation}\label{eq:orig-sf-don-vec}
+\begin{equation}\label{eq:sf_don_free_vwx}
     \begin{split}
         \bF_{\bU \bU \bU} \cdot \bV \cdot \bW \cdot \bX = \frac{1}{6} \bigg[
             &\bF_{\bU \bU \bU} \cdot \left( \bV + \bW + \bX \right) \cdot \left( \bV + \bW + \bX \right) \cdot \left( \bV + \bW + \bX \right) \\
@@ -501,3 +503,246 @@ to prevent the division by zero case.
 
 
 \section{Recursive System-Free Approach}\label{sec:recursive_sf}
+
+The original system-free (SF) approach presented in the previous section
+provides good approximations of tensor contractions between \textit{Jacobian-like} terms and vectors.
+However, the original SF method becomes less attractive for
+any PIF method higher than third-order accuracy,
+as it demands increasing complexity in code implementation,
+which results in a significant loss in the overall performance of the code.
+For example, \cref{eq:sf_don_free_vwx} requires 28 times flux function calls
+for just getting a single tensor contraction, \( \bF_{\bU\bU\bU} \cdot \bV \cdot \bW \cdot \bX \).
+It is worth noting that the major bottleneck of the original SF method
+stems from \cref{eq:sf_hes_free_vw} and \cref{eq:sf_don_free_vwx}
+that require to perform the \textit{Jacobian-like} approximations multiple times.
+
+To avoid the additional modifications for the case of the tensor contractions with different vectors,
+the improved version of the SF method was proposed in~\cite{lee2021recursive}.
+This new, improved SF method, apply the Jacobian-free method recursively to construct the high-order Jacobian-like terms.
+
+The recursive SF method starts from defining a functional \( \mathcal{D}_{u} \)
+that represents the Jacobian-free method denoted in~\cref{eq:sf_jac_free}:
+\begin{equation}\label{eq:rsf_functional}
+    \bF_{\bU} \cdot \bV \approx \mathcal{D}_{u} (\bF \scolon \bV) \coloneqq
+    \frac{1}{2\varepsilon_{v}} \bigg[
+        \bF(\bU + \varepsilon_{v} \bV) - \bF(\bU - \varepsilon_{v} \bV)
+    \bigg],
+\end{equation}
+where \( \varepsilon_{v} \) is the appropriately calculated \( \varepsilon \)
+corresponding to the vector \( \bV \)
+by following the original system-free method~\cref{eq:sf_epsilon_norm},
+\begin{equation}\label{eq:rsf_epsilon}
+    \varepsilon_{v} = \min \left(\bar{\varepsilon}_{v}, \; \dt \right), \quad \text{where} \;
+    \bar{\varepsilon}_{v} = \frac{\sqrt{\varepsilon^{op}}}{\left\lVert \bV \right\rVert_{2}}.
+\end{equation}
+The recursive SF method uses \( \varepsilon^{op} = \num{4.8062e-06} \)
+that is the optimal \( \varepsilon \) value
+for the second-order Jacobian-free approximation in the 64-bit machine
+as it shown in \cref{eq:sf_epsilon_jac_optimal}.
+This choice is also justifiable for the recursive scheme considered below,
+where the functional \( \mathcal{D}_{u} \) itself is defined as the Jacobian-free method fundamentally.
+
+By applying \( \mathcal{D}_{u} \) in the following successive fashion,
+the tensor contractions between higher order derivatives for
+the flux function \( \bF \) and arbitrary vectors.
+For instance, the Hessian approximation becomes,
+\begin{equation}\label{eq:rsf_hes_free}
+    \begin{split}
+        \bF_{\bU \bU} \cdot \bV \cdot \bW &\approx
+        \mathcal{D}_{u} \Big( \mathcal{D}_{u} (\bF \scolon \bV) \scolon \bW \Big) \\
+        &
+        \begin{split}
+            =\frac{1}{4 \varepsilon_{v} \varepsilon_{w}}
+                \bigg[
+                     &\bF(\bU + \varepsilon_{v} \bV + \varepsilon_{w} \bW)
+                    -\bF(\bU - \varepsilon_{v} \bV + \varepsilon_{w} \bW)\\
+                    -&\bF(\bU + \varepsilon_{v} \bV - \varepsilon_{w} \bW)
+                    +\bF(\bU - \varepsilon_{v} \bV - \varepsilon_{w} \bW)
+                \bigg].
+        \end{split}
+    \end{split}
+\end{equation}
+Again, following~\cref{eq:rsf_epsilon},
+\( \varepsilon_{v} \) and \( \varepsilon_{w} \) are the optimal \( \varepsilon \) values
+normalized by its corresponding vectors \( \bV \) and \( \bW \), respectively.
+
+Note that the improved version of the Hessian-free method in \cref{eq:rsf_hes_free}
+is applicable regardless the tensor contraction is
+with two identical vectors (e.g., \( \bF_{\bU \bU} \cdot \bV \cdot \bV \))
+or with two distinct vectors (e.g., \( \bF_{\bU \bU} \cdot \bV \cdot \bW \)),
+hence it does not require separate formulations as in
+\cref{eq:sf_hes_free_vw,eq:sf_don_free_vwx}.
+
+The simplicity gain from the improved version of the system-free method
+is further rewarded when
+considering the higher-order derivatives of \( \bF \).
+Following the equivalent strategy, the tensor contraction of
+the third-order derivative of the flux function, \( \bF_{\bU \bU \bU} \)
+with three distinct vectors, \( \bV, \bW \), and \( \bX \) is written compactly as,
+\begin{equation}\label{eq:rsf_don_free}
+    \begin{split}
+        \bF_{\bU \bU \bU} & \cdot \bV \cdot \bW \cdot \bX \approx
+        \mathcal{D}_{u} \Bigg( \mathcal{D}_{u} \Big( \mathcal{D}_{u} (\bF \scolon \bV) \scolon \bW \Big) \scolon \bX \Bigg) \\
+        &
+        \begin{split}
+            =\frac{1}{8 \varepsilon_{v} \varepsilon_{w} \varepsilon_{x}}
+            \bigg[
+                &\bF(\bU + \varepsilon_{v} \bV + \varepsilon_{w} \bW + \varepsilon_{x} \bX)
+                -\bF(\bU - \varepsilon_{v} \bV + \varepsilon_{w} \bW + \varepsilon_{x} \bX)\\
+                -&\bF(\bU + \varepsilon_{v} \bV - \varepsilon_{w} \bW + \varepsilon_{x} \bX)
+                +\bF(\bU - \varepsilon_{v} \bV - \varepsilon_{w} \bW + \varepsilon_{x} \bX)\\
+                -&\bF(\bU + \varepsilon_{v} \bV + \varepsilon_{w} \bW - \varepsilon_{x} \bX)
+                +\bF(\bU - \varepsilon_{v} \bV + \varepsilon_{w} \bW - \varepsilon_{x} \bX)\\
+                +&\bF(\bU + \varepsilon_{v} \bV - \varepsilon_{w} \bW - \varepsilon_{x} \bX)
+                -\bF(\bU - \varepsilon_{v} \bV - \varepsilon_{w} \bW - \varepsilon_{x} \bX)
+            \bigg].
+        \end{split}
+    \end{split}
+\end{equation}
+
+Here, the performance between the recursive SF method and the original SF method
+can be compared by the number of flux function calls.
+For instance, considering the case of approximating \( \bF_{\bU\bU\bU} \cdot \bV \cdot \bW \cdot \bX \) term,
+the original SF method requires 28 function calls.
+On the other hand, the recursive SF method needs only eight evaluations.
+This is a huge improvement in both performance and compactness. 
+
+By utilizing~\crefrange{eq:rsf_functional}{eq:rsf_don_free},
+all the tensor contractions needed in the fourth-order PIF method
+in \crefrange{eq:pif_Ft}{eq:pif_divtx} can be approximated without
+the analytical calculations of the \textit{Jacobian-like} terms.
+Combining the recursive SF method, the PIF method can be implemented more efficiently,
+allowing the system independence of the high-order scheme.
+It should be noted that the recursive modifications of the SF method
+presented in this section do not affect the solution's accuracy and stability
+compared to the original SF method.
+
+The fourth-order SF-PIF4 method can be summarized as the following stepwise fashion.
+The discretization indices \( i,j,k \) and \( n \) are omitted for simplicity
+in representing the conservative variables \( \bU^{n}_{ijk} \)
+and the corresponding fluxes \( \mathcal{F}^{n}_{ijk} = (\bF^{n}_{ijk}, \bG^{n}_{ijk}, \bH^{n}_{ijk}) \).
+\begin{enumerate}
+    \item[] \textbf{Step 1:}
+        Calculate \( \Div = \bF_{x} + \bG_{y} + \bH_{z} \) via the standard fourth-order accurate, 
+        five-point central differencing scheme
+        on every grid point and save them.
+        These saved flux divergences will be used as inputs for the central differencing formulae
+        in the following steps to get higher-order spatial derivatives.
+        %
+    \item[] \textbf{Step 2:}
+        Apply the Jacobian approximation in \cref{eq:rsf_functional} in preparation 
+        for \( \bF_{t} \) as expressed in \cref{eq:pif_Ft},
+        and construct the second-order temporally averaged flux \( \bF^{appx,2} = \bF + \dt \bF_{t}/2 \).
+        Apply the similar procedures to \( y- \) and \( z- \)directional fluxes to obtain
+        \( \bG^{appx,2}\) and \( \bH^{appx,2}\).
+        This finalizes the second-order temporal approximations of pointwise fluxes in all directions.
+        %
+    \item[] \textbf{Step 3:}
+        Given the pointwise conservative variables \( \bU \) and
+        the divergence of fluxes \( \Div \) from \textbf{Step 1},
+        calculate \( \bU_{x}, \bU_{y}, \bU_{z}, \Div_{x}, \Div_{y}, \) and \( \Div_{z} \)
+        via the same five-point central differencing operator in \textbf{Step 1}.
+        They will be used as building blocks for constructing \( \bF_{tt}, \bG_{tt} \) and \( \bH_{tt} \)
+        in the following steps.
+        %
+    \item[] \textbf{Step 4:}
+        Apply the Jacobian and Hessian approximations in \cref{eq:rsf_functional,eq:rsf_hes_free} to
+        the spatially approximated derivative quantities in \textbf{Step 3}
+        in order to compute \( \Div_{t} \)
+        by following the explicit expression in \cref{eq:pif_divt}.
+        %
+    \item[] \textbf{Step 5:}
+        Apply the Jacobian approximation in \eqref{eq:rsf_functional}
+        to \( \Div_{t} \) from \textbf{Step 4} and
+        the Hessian approximation in \eqref{eq:rsf_hes_free}
+        to \( \Div\) from  \textbf{Step 1} in order
+        to get \( \bF_{tt} \) using \cref{eq:pif_Ftt};
+        add the computed \( \bF_{tt} \)  to the results of \textbf{Step 2}
+        to update the second-order temporal fluxes in \textbf{Step 2} 
+        to the third-order temporally averaged flux,
+        \( \bF^{appx,3} = \bF^{appx,2} + \dt^{2} \bF_{tt}/6 \).
+        Perform the similar procedures in \( y- \) and \( z- \)directions to obtain
+        \( \bG^{appx,3}\) and \( \bH^{appx,3}\).
+        This finalizes the third-order temporal approximations of pointwise fluxes in all directions.
+        %
+    \item[] \textbf{Step 6:}
+        Using the five-point central differencing, 
+        compute the fourth-order accurate approximations 
+        of the second derivatives and the mixed-derivatives
+        of the conservative variables and the divergence of fluxes
+        to obtain
+        \( \bU_{xx}, \bU_{xy}, \bU_{yy}, \dots \) etc. and \( \Div_{xx}, \Div_{xy}, \Div_{yy}, \dots \) etc.
+        %
+    \item[] \textbf{Step 7:}
+        Apply the tensor contractions of the first, second, and
+        third-order flux derivatives in \cref{eq:rsf_functional,eq:rsf_hes_free,eq:rsf_don_free}
+        to the quantities computed and stored from the previous steps in order to 
+        calculate \( \Div_{tt} \) and \( \Div_{tx} \)
+        by following the explicit relations in \cref{eq:pif_divtt,eq:pif_divtx} respectively.
+        Also calculate \( \Div_{ty} \) and \( \Div_{tz} \) similarly.
+        %
+    \item[] \textbf{Step 8:}
+        Next, perform the last set of tensor contractions
+        in \cref{eq:rsf_functional,eq:rsf_hes_free,eq:rsf_don_free}
+        to construct \( \bF_{ttt} \) as expressed in \cref{eq:pif_Fttt}.
+        Add the resulting \( \bF_{ttt} \) to the result of \textbf{Step 5} to obtain the fourth-order
+        temporally averaged flux,
+        \( \bF^{appx,4} = \bF^{appx,3} + \dt^{3} \bF_{ttt}/24 \).
+        Perform the similar procedures in \( y- \) and \( z- \)directions to obtain
+        \( \bG^{appx,4}\) and \( \bH^{appx,4}\).
+        This finalizes the fourth-order temporal approximations of pointwise fluxes in all directions.
+        %
+    \item[] \textbf{Step 9:}
+        Proceed with the conventional FDM procedures for high-order spatial accuracy, viz.,
+        apply a high-order reconstruction method with a characteristic flux-splitting strategy
+        in Eq.~\eqref{eq:num-flx}
+        to the results, \( \bF^{appx,4}\), \( \bG^{appx,4}\), and \( \bH^{appx,4}\),
+        from \textbf{Step 8}. For example, taking WENO-JS (\cref{subsec:weno}) as a reconstruction method using
+        \( \bF^{appx, 4} \) ensures a temporally fourth-order 
+        and spatially fifth-order accurate approximation to the numerical flux,
+        \( \hat{\bff} = \texttt{WENO-JS} \left ( \bF^{appx,4} \right) + \mathcal{O}(\dx^{5},\dt^{4}) \).
+        Perform the similar procedures in \( y- \) and \( z- \)directions to obtain
+        \( \hat{\bg}\) and \( \hat{\bh}\).
+        %
+    \item[] \textbf{Step 10:}
+        Lastly, update the solution following \cref{eq:pif_full_discrete}.
+\end{enumerate}
+
+
+
+\section{Conclusion}\label{sec:sf_conclusion}
+
+The Picard integral formulation (PIF) method is one of the Lax-Wendroff class
+high-order in temporal integration strategies for FDM discretization.
+By virtue of a single-stage time integrator, the PIF method can perform
+faster than the traditional multi-stage method.
+Also, the PIF method does not depend on the spatial reconstruction scheme;
+thus, it can be combined with any high-order spatial method in general.
+
+However, as like other Lax-Wendroff type schemes,
+the PIF method highly depends on the system of equations,
+requiring analytical derivations for \textit{Jacobian-like} terms.
+Although the symbolic manipulation tools can aid these calculations,
+\textit{Jacobian-like} terms remain as a major implementation hurdle due to their perplexing structures.
+
+The (original, non-recursive) system-free (SF) approach provides capability
+to Lax-Wendroff type scheme to bypass all the analytical derivations of Jacobian-like terms,
+approximating tensor contractions between Jacobian-like terms and arbitrary vectors.
+The major advantage of SF method lies in ease of its code implementation for practical use.
+By combining with PIF method, SF-PIF method can be applied to any system of equations
+to furnish high-order in temporal accuracy in a single-step.
+However, the increasing number of calculations needed for
+higher order derivatives of the flux function \( \bF \) with respect to the conservative variables \( \bU \)
+makes the SF method less attractive for higher than third-order PIF method.
+
+The improved version, recursive SF approach is then introduced to minimize
+the number of calculation needed for approximating the tensor contractions.
+The recursive SF method introduced a functional representing the Jacobian-free method,
+then the higher order derivative terms can be obtained by applying the functional recursively.
+This feature allows to extend SF-PIF method to the fourth-order accuracy efficiently.
+
+It is important to note that the SF method is neither designed particularly for the PIF method
+nor any specific numerical methods in CFD.
+Instead, it is solely intended for approximating the Jacobian-like tensor contractions,
+so the SF approach is applicable in otehr numerical algorithms
+to enhance the calculation speed and implementation efficiency.
