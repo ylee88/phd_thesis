@@ -231,9 +231,57 @@ For the cross derivatives,
     \frac{\bF_{i+1, j+1} - \bF_{i-1, j+1} - \bF_{i+1, j-1} + \bF_{i-1 j-1}}{4\dx\dy} + \mathcal{O}(\dx^{2}, \dy^{2}).
 \end{equation}
 
-\noter{WENO-weighted finite difference operators should be introduced here.}
+The above five-points central differencing formulae can produce sufficiently accurate predictions
+of spatial derivatives for the PIF method.
+However, these conventional approaches cannot capture the shock discontinuities,
+leading to unforeseen spurious oscillations
+at strong shock profiles. (e.g., Sod shock problem)
 
-In practical code implementation, reusing the flux divergence \( \Div \)
+One solution to this issue is to introduce WENO nonlinear weights in~\cref{eq:weno_nonlin_weights}
+to the central differencing formula.
+Alike the fifth-order WENO reconstruction scheme,
+consider the three central differencing schemes approximating
+the first-order derivatives at \( x = x_{i} \),
+in each sub-stencil as,
+\begin{equation}\label{eq:pif_wenodiff_subs}
+    \begin{split}
+        \bd_{1} & = \frac{1}{2 \Delta x} \left( \bF_{i - 2} - 4 \bF_{i - 1} + 3 \bF_{i} \right), \\
+        \bd_{2} & = \frac{1}{2 \Delta x} \left( - \bF_{i - 1} + \bF_{i + 1} \right), \\
+        \bd_{3} & = \frac{1}{2 \Delta x} \left( - 3 \bF_{i} + 4 \bF_{i + 1} - \bF_{i + 2} \right).
+    \end{split}
+\end{equation}
+Then the goal is to make a convex combination with the nonlinear weights \( \omega_{m} \)
+describing the first-order derivatives at \( x=x_{i} \):
+\begin{equation}\label{eq:pif_wenodiff_convex}
+    \left. \bF_{x} \right|_{x = x_{i}} \approx \omega_{1} \bd_{1} + \omega_{2} \bd_{2} + \omega_{3} \bd_{3}.
+\end{equation}
+In a smooth region, following the original context of WENO,
+the nonlinear weights \( \omega_{m} \) are anticipated to be reduced
+to the linear weights \( \gamma_{m} \) so that the convex combination represents
+the approximation of \( \bF_{x} \) in a whole five-point stencil.
+That is to say, the convex combination with the linear weights
+should be equal to~\cref{eq:pif_central_dfdx},
+\begin{equation}\label{eq:pif_wenodiff_linear_convex}
+    \gamma_{1} \bd_{1} + \gamma_{2} \bd_{2} + \gamma_{3} \bd_{3} =
+    \frac{1}{12 \Delta x} \left( \bF_{i - 2} - 8 \bF_{i - 1} + 8 \bF_{i + 1} - \bF_{i + 2} \right).
+\end{equation}
+Explicitly, the linear weights for the five-point WENO-\textit{like} central differencing
+are given by,
+\begin{equation}\label{eq:pif_wenodiff_linear_weights}
+    \gamma_{1} = \frac{1}{6} \quad \gamma_{2} = \frac{4}{6} \quad \gamma_{3} = \frac{1}{6}.
+\end{equation}
+The nonlinear weights \( \omega_{m} \) are calculated in the same way
+as the classical WENO-JS reconstruction method in~\cref{eq:weno_nonlin_weights},
+with the same choice of the smoothness indicators, \( \beta_{m} \) in \cref{eq:weno_smoothness_ind}.
+
+Although the fourth-order PIF method requires the second-order derivatives~\cref{eq:pif_central_dfdxx}
+and cross derivatives~\cref{eq:pif_central_dfdxy}; however, using the WENO-\textit{like}
+central differencing formula above only for the first-order derivative
+effectively reduces the oscillations of the PIF method.
+Needless to say, the WENO-\textit{like} central differencing~\cref{eq:pif_wenodiff_convex}
+increases the overall computational loads of the PIF method.
+
+In practical code implementation, it is worth to noting that reusing the flux divergence \( \Div \)
 for calculating high-order spatial derivatives is more efficient than calculating them directly.
 For example, \( \Div_{x} \) can be calculated as \( \texttt{dx}(\Div) \),
 with the numerical spatial derivative function \( \texttt{dx}(\cdot) \),
@@ -715,6 +763,11 @@ and the corresponding fluxes \( \mathcal{F}^{n}_{ijk} = (\bF^{n}_{ijk}, \bG^{n}_
 
 \noter{Math is looking good, but missing numerical results}
 
+Since the PIF method depends on the LW/CK procedure,
+the PIF method must be modified accordingly when the governing equation has changed.
+For instance, the non-homogeneous system of equations with source term \( \bS(\bU) \),
+the solution updating strategy for the original PIF method~\cref{eq:pif_time_avg}
+should be modified with appropriately time-averaged source term.
 Consider a conservative equations with a source term \( \bS(\bU) \),
 \begin{equation}\label{eq:sf_source_gov}
     \bU_{t} + \nabla \cdot \mathcal{F}(\bU) = \bS(\bU),
@@ -739,7 +792,7 @@ where
         &= \bS^{appx,q} (\bx, t^{n}) + \mathcal{O}(\Delta t^{q}).
     \end{split}
 \end{equation}
-for fourth-order PIF method,
+for the fourth-order PIF method,
 \begin{equation}\label{eq:sf_source_4order}
     \bS^{appx, 4} (\bx) = \bS (\bx, t^{n})
         + \left. \frac{\Delta t}{2!} \partial_{t}^{(1)} \bS (\bx, t) \right|_{t = t^{n}}
