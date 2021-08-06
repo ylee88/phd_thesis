@@ -132,8 +132,7 @@ the fourth-order approximated time-averaged flux in the \( x \)-direction, \( \b
 from the Taylor expansion of the pointwise flux around \( t^{n} \).
 As expressed in~\cref{eq:pif_flux_taylor}, the fourth-order PIF method requires
 \begin{equation}\label{eq:pif_flux_4order}
-\bF^{appx, 4} (\bx)
-    = \bF (\bx, t^{n})
+    \bF^{appx, 4} (\bx) = \bF (\bx, t^{n})
         + \left. \frac{\Delta t}{2!} \partial_{t}^{(1)} \bF (\bx, t) \right|_{t = t^{n}}
         + \left. \frac{\Delta t^{2}}{3!} \partial_{t}^{(2)} \bF (\bx, t) \right|_{t = t^{n}}
         + \left. \frac{\Delta t^{3}}{4!} \partial_{t}^{(3)} \bF (\bx, t) \right|_{t = t^{n}}.
@@ -707,6 +706,113 @@ and the corresponding fluxes \( \mathcal{F}^{n}_{ijk} = (\bF^{n}_{ijk}, \bG^{n}_
     \item[] \textbf{Step 10:}
         Lastly, update the solution following \cref{eq:pif_full_discrete}.
 \end{enumerate}
+
+
+
+
+
+\section{System-Free PIF method with Source term}\label{sec:sfpif_source}
+
+\noter{Math is looking good, but missing numerical results}
+
+Consider a conservative equations with a source term \( \bS(\bU) \),
+\begin{equation}\label{eq:sf_source_gov}
+    \bU_{t} + \nabla \cdot \mathcal{F}(\bU) = \bS(\bU),
+\end{equation}
+taking time-averaging,
+\begin{equation}\label{eq:sf_source_time_average}
+    \bU^{n + 1} = \bU^{n} - \dt \left( \partial_{x} \bF^{avg} + \partial_{y} \bG^{avg} + \partial_{z} \bH^{avg} \right)
+        + \dt \bS^{avg},
+\end{equation}
+where
+\begin{equation}\label{eq:sf_source_time_taylor}
+    \begin{split}
+        \bS^{avg} (\bx)
+        &= \frac{1}{\dt} \int^{t^{n + 1}}_{t^n} \bS(\bx, t) \mathop{dt}\\
+        % &= \bS (\bx, t^{n})
+        %     + \left. \frac{\Delta t}{2!} \partial_{t}^{(1)} \bS (\bx, t) \right|_{t = t^{n}}
+        %     + \left. \frac{\Delta t^{2}}{3!} \partial_{t}^{(2)} \bS (\bx, t) \right|_{t = t^{n}}
+        %     + \left. \frac{\Delta t^{3}}{4!} \partial_{t}^{(3)} \bS (\bx, t) \right|_{t = t^{n}}
+        %     + \cdots \\
+        &= \sum\limits_{i=0}^{q-1}
+            \left.\frac{\dt^{i}}{(i+1)!} \partial_{t}^{(i)} \bS (\bx, t) \right|_{t = t^{n}} + \mathcal{O}(\Delta t^{q}) \\
+        &= \bS^{appx,q} (\bx, t^{n}) + \mathcal{O}(\Delta t^{q}).
+    \end{split}
+\end{equation}
+for fourth-order PIF method,
+\begin{equation}\label{eq:sf_source_4order}
+    \bS^{appx, 4} (\bx) = \bS (\bx, t^{n})
+        + \left. \frac{\Delta t}{2!} \partial_{t}^{(1)} \bS (\bx, t) \right|_{t = t^{n}}
+        + \left. \frac{\Delta t^{2}}{3!} \partial_{t}^{(2)} \bS (\bx, t) \right|_{t = t^{n}}
+        + \left. \frac{\Delta t^{3}}{4!} \partial_{t}^{(3)} \bS (\bx, t) \right|_{t = t^{n}}.
+\end{equation}
+
+In order to modify the conventional PIF procedures
+in a way that maintaining the general mathematical structures
+in~\cref{sec:pif}, consider a modified flux divergence \( \Divs \) defined as,
+\begin{equation}\label{eq:sf_source_divs}
+    \Divs \coloneqq \Div - \bS.
+\end{equation}
+Then, the time derivatives of the source term can be calculated through
+the LW/CK procedures as,
+\begin{equation}\label{eq:sf_source_St}
+    \bS_{t} = -\bS_{\bU} \Divs,
+\end{equation}
+\begin{equation}\label{eq:sf_source_Stt}
+    \bS_{tt} = \bS_{\bU \bU} \cdot \Divs \cdot \Divs - \bS_{\bU} \cdot \Divs_{t},
+\end{equation}
+\begin{equation}\label{eq:sf_source_Sttt}
+    \bS_{ttt} = -\bS_{\bU \bU \bU} \cdot \Divs \cdot \Divs \cdot \Divs
+    + 3 \bS_{\bU \bU} \cdot \Divs \cdot \Divs_{t}
+    - \bS_{\bU} \cdot \Divs_{tt}.
+\end{equation}
+
+The equation independence property of the system-free method
+is rewarded in calculations of the source Jacobian \( \bS_{\bU} \) and Hessian \( \bS_{\bU\bU} \),
+since the only required job is to change the flux function
+in~\cref{eq:rsf_functional,eq:rsf_hes_free} to the source function, \( \bS(\bU) \).
+
+The time derivatives of the modified flux divergence, \( \Divs_{t} \) and \( \Divs_{tt} \),
+can be defined as linear combinations with the time derivatives of the conventional
+flux divergence terms as,
+\begin{equation}\label{eq:sf_source_divst}
+    \begin{split}
+        \Divs_{t} &= \Div_{t} - \bS_{t} \\
+                  &= \Div_{t} + \bS_{\bU} \cdot \Divs,
+    \end{split}
+\end{equation}
+and
+\begin{equation}\label{eq:sf_source_divstt}
+    \begin{split}
+        \Divs_{tt} &= \Div_{tt} + \left( \bS_{\bU} \cdot \Divs \right)_{t} \\
+                   &= \Div_{tt} - \bS_{\bU\bU} \cdot \Divs \cdot \Divs + \bS_{\bU} \cdot \Divs_{t},
+    \end{split}
+\end{equation}
+where \( \Div_{t} \) and \( \Div_{tt} \) are defined in~\cref{eq:pif_divt,eq:pif_divtt}, respectively.
+
+
+With a new governing equation, \cref{eq:sf_source_gov},
+the high-order time derivatives of the flux functions, e.g., \( \bF_{t}, \bF_{tt}, \) and \( \bF_{ttt} \)
+in \cref{eq:pif_flux_4order}
+should be adjusted with the modified flux divergence, \( \Divs \).
+The governing equation~\cref{eq:sf_source_gov} leads
+the adjusted first time derivative as,
+\begin{equation}\label{eq:sf_source_Ft}
+    \bF_{t} = -\bF_{U} \Divs.
+\end{equation}
+Using the modified flux divergence, \( \Divs \), the adjusted time derivatives of the flux functions
+maintain the similar mathematical structures in~\cref{eq:pif_Ft,eq:pif_Ftt,eq:pif_Fttt} as,
+\begin{equation}\label{eq:sf_source_Ftt}
+    \bF_{tt} = \bF_{\bU \bU} \cdot \Divs \cdot \Divs - \bF_{\bU} \cdot \Divs_{t},
+\end{equation}
+and
+\begin{equation}\label{eq:sf_source_Fttt}
+    \bF_{ttt} = -\bF_{\bU \bU \bU} \cdot \Divs \cdot \Divs \cdot \Divs
+    + 3 \bF_{\bU \bU} \cdot \Divs \cdot \Divs_{t}
+    - \bF_{\bU} \cdot \Divs_{tt},
+\end{equation}
+where \( \Divs_{t} \) and \( \Divs_{tt} \) are defined as in~\cref{eq:sf_source_divst,eq:sf_source_divstt} respectively.
+
 
 
 
