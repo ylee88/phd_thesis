@@ -466,6 +466,98 @@ is well-managed compared with RK3.
 
 \subsection{Shallow water equations}\label{subsec:shallow}
 
+One of the essential features of the SF-PIF methods is that the SF-PIF methods
+can be applicable to any other system without changing the high-order parts of the simulation codes.
+As an example of the system independence feature,
+the simulation result by changing the system of equations to the 2D shallow water equations (SWE)
+without a source term is presented in this section.
+In SWE, the conservative variables and the flux functions are defined by,
+\begin{equation}\label{eq:swe_gov}
+    \bU = \begin{bmatrix}
+        h \\
+        h u \\
+        h v
+    \end{bmatrix},\quad
+    \bF (\bU) = \begin{bmatrix}
+        h u \\
+        h u^{2} + \frac{1}{2} g h^{2} \\
+        h u v
+    \end{bmatrix}, \quad
+    \bG (\bU) = \begin{bmatrix}
+        h v \\
+        h u v \\
+        h v^{2} + \frac{1}{2} g h^{2}
+    \end{bmatrix}.
+\end{equation}
+Here, \( h \) is the vertical depth of the fluid,
+\( \mathbf{v} = \left( u, v \right)  \) is a vector of 
+vertically-averaged velocity components in $x$- and $y$-directions.
+Denoted as \( g \) is a gravitational acceleration in the negative vertical 
+$z$-direction, which is averaged out in the derivation of the shallow water equations.
+
+The sole purpose of presenting the new system of equations above
+is to demonstrate the flexibility of SF-PIF schemes,
+in that the system-free approach allows an easy code implementation
+without the need for other analytical derivations of new
+Jacobian-\textit{like} terms of the new governing system.
+By virtue of the system-independent property of the SF-PIF methods,
+the process of changing from the 2D Euler code to the 2D SWE code is
+no more than switching the governing equations
+without touching anything on the high-order numerical parts.
+This process is much simpler than other Lax-Wendroff type schemes (PIF, for example),
+where each governing system should re-calculate the Jacobian-\textit{like} terms.
+
+The well-known circular dam-breaking problem~\cite{alcrudo1993high,toro2001shock,delis2005numerical}
+is conducted to validate the numerical capability of the SF-PIF method in SWE\@.
+Initially, a volume of still water is confined
+in the virtual (i.e., invisible) cylindrical 
+wall with a radius of 11 meters (m),
+located at the center of simulation domain,
+\( \left[ \SI{50}{\meter} \times \SI{50}{\meter} \right] \)
+resolved on a $100 \times 100$ grid resolution.
+The depth of the water inside of the wall is
+\( \SI{10}{\meter} \) and \( \SI{1}{\meter} \) outside.
+This configuration would be considered as an
+SWE version of 2D Riemann problem.
+Explicitly, the initial condition is given as,
+\begin{equation}\label{eq:swe-init}
+    \left(h, u, v \right) = \begin{cases}
+        \left(\SI{10}{\meter}, 0, 0 \right) & \text{for } r \le \SI{11}{\meter}, \\
+        \left(\SI{1}{\meter}, 0, 0 \right) & \text{for } r > \SI{11}{\meter}, \\
+    \end{cases}
+\end{equation}
+where \( r \) is the distance from the center of domain,
+\( r = \sqrt{\left( x - \SI{25}{\meter} \right)^{2} + \left( y - \SI{25}{\meter} \right)^{2} } \).
+The outflow boundary condition is applied for both directions,
+and the gravitational acceleration is \( g = \SI{9.81}{\meter\per\square\second}\).
+Again, the Courant number is set to \( C_{\text{cfl}} = 0.4 \).
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\textwidth]{fig/swe_circ_osf3_all.png}
+    \caption{Snapshots of the circular dam breaking simulation
+        at four different times, \( t = 0.345, 0.69, 1.035, \) and $1.38$ seconds.
+        A volume of water in rest is initially confined
+        in a cylindrical dam of a radius $r=11$ m and a height $h=10$ m.
+        The simulation starts with an instantaneous removal of the cylindrical wall
+        located at the center of the domain
+        \( \left[ \SI{50}{\meter} \times \SI{50}{\meter} \right] \)
+        resolved on a grid resolution of $100 \times 100$.
+        The gravitational force is exerted on the steady water,
+        which triggers the onset of the gravitational collapse of the entire volume of water,
+        making the circular splash in the outer rim as well as the ripple effects
+        in the central region that move radially outward in time.
+    }\label{fig:swe_circ}
+\end{figure}
+
+The results of the simulation with the oSF-PIF3 method are presented in~\cref{fig:swe_circ}.
+The figure represents well-comparable numerical solutions
+with the results using the same configuration
+reported in~\cite{alcrudo1993high,toro2001shock,delis2005numerical}.
+As shown in \cref{fig:swe_circ}, the overall spherical symmetry and the sharp profile
+at the wavefront are well-maintained in each snapshot
+at four different times, \( t = 0.345, 0.69, 1.035, \) and \( 1.38 \).
+
 
 
 \section{SF-PIF method with WENO-JS}\label{sec:result_wenojs}
@@ -474,15 +566,393 @@ is well-managed compared with RK3.
 
 \subsection{The Shu-Osher problem (rotated \(\ang{45}\))}\label{subsec:shu45_weno}
 
+The Shu-Osher problem~\cite{shu1989efficient} is a well-known benchmark problem
+that describes the interactions between a Mach 3 shock and a smooth density profile.
+Initially, a Mach 3 shock wave travels to the right through a sinusoidally perturbed
+density profile. As the shock wave propagates along the perturbed region,
+the profile gets compressed, resulting in a frequency-doubled region behind the shock. 
+As the shock wave moves further to the right,
+the doubled-frequency region returns to its original frequency, at which point
+it becomes a sequence of sharp profile instead of smooth sine wave
+due to the shock-steepening.
+
+In this section, the Shu-Osher problem is performed in 2D by inclining the shock wave direction
+by an angle of \(\theta = \ang{45} \),
+adopting the idea of Kawai~\cite{kawai2013divergence},
+where the initial conditions are repeated multiple times along the direction of the
+wave propagation so that the problem may be executed with periodic boundary conditions.
+Explicitly, the initial condition is given as,
+\begin{equation}\label{eq:shu45_gov}
+    \begin{split}
+        &\bU(x_{\parallel}, t=0) = \begin{cases}
+            \bU_{L} & \text{for } x_{\parallel} \le 1, \quad 11 < x_{\parallel} \le 21, \quad 31 < x_{\parallel} \le 40, \\
+            \bU_{R} & \text{for } 1 < x_{\parallel} \le 11, \quad 21 < x_{\parallel} \le 31,
+        \end{cases}\\
+        &\text{where } \bU_{L} = \begin{bmatrix}
+            \rho = 3.857143 \\
+            u = 2.629369\cos(\pi/4) \\
+            v = 2.629369\sin(\pi/4) \\
+            p = 10.33333
+        \end{bmatrix},\quad
+        \bU_{R} = \begin{bmatrix}
+            \rho = 1 + 0.2\sin(5 x_{\parallel}) \\
+            u = 0 \\
+            v = 0 \\
+            p = 1
+        \end{bmatrix}.
+    \end{split}
+\end{equation}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.95\textwidth]{fig/shu45_2d_snapshot.png}
+    \caption{2D density maps of inclined 2D Shu-Osher test problem
+        at \( t=0 \) and \( t=1.8 \). The test was performed on a 2D simulation box
+        of \(1024 \times 1024 \) resolution with the SF-PIF4 method.
+        The solid black line represents the shock propagating direction, \( x_{\parallel} \),
+        and squares divide the line in each quartile.
+    }\label{fig:shu45_cmap}
+\end{figure}
+
+\( x_{\parallel} = x \cos{\theta} + y \sin{\theta} \) is the direction
+parallel to the wave propagation and the simulation domain is a periodic box of
+\( [0, 20/\cos{\theta}] \times [0, 20/\sin{\theta}] \).
+With this configuration, the 1D test problem, Shu-Osher test,
+can be performed on the diagonal direction of 2D periodic box.
+The same 1D solution is expected by following the diagonal direction, \( x_{\parallel} \),
+and taking only the bottom-left quarter of the diagonal axis.
+Therefore, the number of data points of this result profiles
+would be a quarter of the 2D grid resolution,
+i.e., \( N_{\parallel} = N_{x}/4 = N_{y}/4 \).
+The 2D density map of the initial and final conditions are plotted in~\cref{fig:shu45_cmap}.
+
+\begin{figure}
+    \centering
+    \begin{subfigure}{70mm}
+        \centering
+        \includegraphics[width=0.95\textwidth]{fig/shu45_weno5_256}
+    \end{subfigure}
+    \begin{subfigure}{70mm}
+        \centering
+        \includegraphics[width=0.95\textwidth]{fig/shu45_weno5_256_zoomed}
+    \end{subfigure}
+    \caption{One dimensional density profiles along the \( x_{\parallel} \) direction 
+        of the inclined Shu-Osher problem at \( t = 1.8 \).
+        The solid line represents the reference solution,
+        solved by RK4 with 1024 data points
+        in the diagonal axis, i.e., \( N_{\parallel} = 1024 \).
+        All other solutions, represented by the symbols, are resolved on an
+        \( N_{\parallel} = 256 \) grid resolution in the diagonal axis.
+        The detailed view of the high-frequency region is shown
+        on the right panel.
+    }\label{fig:shu45}
+\end{figure}
+
+The density profiles of the bottom-left quarter of the diagonal axis \( x_{\parallel} \)
+are given in~\cref{fig:shu45}. All tests are performed on a box of resolution \( N_{x} = N_{y} = 1024 \),
+so the effective resolution of each profile is \( N_{\parallel} = 256 \),
+except for the reference solution, which performed on a finer grid, \( N_{\parallel} = 1024 \).
+The four different temporal methods, RK3, RK4, SF-PIF3, and SF-PIF4 produce
+reasonably acceptable solution profiles capturing the high-frequency amplitudes
+fairly well in the frequency-doubled region.
+Generally, RK methods capture the amplitudes marginally better,
+but in the left-most part of the double-frequency region, \( x \approx 5.8 \),
+SF-PIF methods capture the highest peak of the amplitude better than
+the RK methods near the transition between the frequency 
+doubling and the shock steepened perturbations.
+
+
+
+
 \subsection{2D Riemann problem: Configuration 3}\label{subsec:2drp_c3_weno}
+
+The two-dimensional Riemann problem is a widespread benchmark problem to test
+the methods' ability to capture the complex fluid structures in 2D.
+This specific setup and other types of configurations have been
+extensively studied in~\cite{zhang1990conjecture, schulz1993classification, schulz1993numerical}
+and have been adopted as prevalent benchmark test problems.
+This dissertation follows the initial condition of Configuration 3
+described in~\cite{don2016hybrid,lee2017piecewise,lee2021single,lee2021recursive}.
+
+The simulation domain is set on \( 1600 \times 1600 \) grid resolution,
+which is generally considered as a very high resolution in 2D simulation.
+This grid resolution choice is made based on the observation in~\cref{subsec:vortex_weno}
+to ensure that the temporal errors are comparable to or dominant over the spatial errors;
+thereby, the temporal error dominant results are anticipated that allows
+to see the different behaviors of four different temporal solvers.
+
+\begin{figure}
+    \centering
+    \begin{subfigure}{140mm}
+        \centering
+        \includegraphics[width=0.9\textwidth]{fig/2drp_c3_weno5_rk_1600.png}
+    \end{subfigure}
+    \begin{subfigure}{140mm}
+        \centering
+        \includegraphics[width=0.9\textwidth]{fig/2drp_c3_weno5_sfPIF_1600.png}
+    \end{subfigure}
+    \caption{The density maps of Configuration 3 at \( t = 0.8 \).
+        \textbf{Left column:} The solutions using RK3 (top) and SF-PIF3 (bottom).
+        \textbf{Right column:} The solutions using RK4 (top) and SF-PIF4 (bottom).
+        Forty levels of black contour lines are over-plotted in each figure
+        with the same range of the color map.
+        All simulations are performed on a \( 1600 \times 1600 \) grid resolution.
+        }\label{fig:2drp_c3}
+\end{figure}
+
+The results at \( t = 0.8 \) are shown in~\cref{fig:2drp_c3}.
+The pseudo-colors represent the density map ranging between \( [0.1, 1.8] \), and
+40 contour lines within the same range are over-plotted as solid black lines.
+
+As illustrated in the figures, all four different temporal schemes produce well-known,
+acceptable results, keeping the assumed diagonal symmetry exceptionally well on this high resolution.
+This problem is highly nonlinear, involving formations of the upward-moving jet,
+the downward-moving mushroom-jet, secondary Kelvin-Helmholtz instabilities exhibited
+as the small-scale vortical rollups along the slip lines and along the stems of the two jets.
+Therefore, it is a non-trivial task to address if a method under consideration is
+\textit{better} or \textit{worse} based on the number of such rollups in the simulations
+without a systemic comparison analysis requiring extensive, careful validation and verification tests
+that are beyond the scope of this dissertation.
+At best, such quantification can only provide
+proof of intrinsic information about the amount of numerical dissipation of each method.
+From this perspective, one concludes that the two SF-PIF solutions produce
+the equivalent amount of vortical rollups compared with the corresponding RK solutions,
+although their different shapes on the downward jets,
+confirming the validity of the recursive SF-PIF methods
+on the presence of the shocks in 2D simulations.
+
+
+
+
 
 \subsection{Double Mach reflection}\label{subsec:dmr_weno}
 
+The double Mach reflection (DMR) test problem was firstly introduced by
+Woodward and colella~\cite{woodward1984numerical}.
+At initial, a planar shock is located at the left side of the domain
+with a \( \ang{30} \) to the reflecting bottom surface.
+As the shock propagates to the right, the bottom wall
+continuously bounces off the shock wave and creates a round reflected shock.
+The initial condition is the same as the original setup in~\cite{woodward1984numerical},
+except for the doubled the \( y \)-domain size following~\cite{kemm2016proper}
+to prevent numerical artifacts from the top boundary interaction with the
+secondary shock wave and the slip line.
 
+\begin{figure}
+    \centering
+    \includegraphics[width=0.85\textwidth]{fig/dmr_overview_sf4.png}
+    \caption{The solution density profile of Double Mach reflection test
+        solved with SF-PIF4 method on a \( 4096 \times 2048 \) grid resolution.
+        The solid black curves represent the forty levels of contour lines
+        ranging within the same range of the colormap.
+        The white-dotted rectangle is the
+        main point of interest in this simulation,
+        where the jet and the primary triple point are formed.
+        More detailed view of the rectangle region
+        with different temporal solvers are plotted in~\cref{fig:dmr}.
+    }\label{fig:dmr_overview}
+\end{figure}
+
+As the solution evolves, two contact discontinuities and two Mach stems are formed,
+as well as a jet along the bottom surface. The formation of the jet is similar
+to the formation of the two jets in implosion test (\cref{subsec:implosion}),
+the collision of which led to the upward moving diagonal jet.
+The solution density profiles resolved with the SF-PIF4 method
+is portrayed in~\cref{fig:dmr_overview}.
+
+\begin{figure}
+    \centering
+    \begin{subfigure}{140mm}
+        \centering
+        \includegraphics[width=0.95\textwidth]{fig/dmr_weno5_rk_4096y2.png}
+    \end{subfigure}
+    \begin{subfigure}{140mm}
+        \centering
+        \includegraphics[width=0.95\textwidth]{fig/dmr_weno5_sf_4096y2.png}
+    \end{subfigure}
+    \caption{The density map of the double Mach reflection test at \( t = 0.25 \)
+        zoomed-in near the jet. Forty levels of contour lines are over-plotted
+        in solid black curves with the same range of the color map.
+        All simulation results are performed on a
+        \( 4096 \times 2048 \) grid resolution.
+        \textbf{Left column:} The solutions using RK3 (top) and SF-PIF3 (bottom).
+        \textbf{Right column:} The solutions using  RK4 (top) and SF-PIF4 (bottom).
+    }\label{fig:dmr}
+\end{figure}
+
+\cref{fig:dmr} shows the zoomed-in views of the main point of interest in the DMR problem,
+the vicinity of the jet and the primary triple point, resolved with four different temporal solvers.
+Again, the results from the third- and fourth-order SF-PIF methods
+produce well-acceptable results compared to the corresponding RK methods.
+There are minor differences in the shape of Kelvin-Helmholtz instabilities along the
+primary slip line and the bottom jet,
+but the overall dynamics of the two SF-PIF solutions match well with the RK solutions,
+validating the fidelity of the proposed SF-PIF methods in the presence of a strong shock.
+
+
+
+\subsection{3D Riemann problem}\label{subsec:3drp}
+
+The 3D Riemann problem is the 3D extension of the 2D Riemann problem described in~\cref{subsec:2drp_c3_weno},
+introduced by Balsara~\cite{balsara2015three}.
+Initially, each octant of the computational domain,
+\( [-1, 1] \times [-1, 1] \times [-1, 1]\),
+has constant initial conditions,
+each of which will carry out 2D Riemann problem
+including the diagonal plane of the 3D computational cubic.
+
+\begin{figure}
+    \centering
+    \begin{subfigure}{140mm}
+        \centering
+        \includegraphics[width=0.95\textwidth]{fig/3drp_all_rk4.png}
+    \end{subfigure}
+    \begin{subfigure}{140mm}
+        \centering
+        \includegraphics[width=0.95\textwidth]{fig/3drp_all_sf4.png}
+    \end{subfigure}
+    \caption{The density maps of the 3D Riemann problem test at \( t = 0.53 \).
+        Forty contour lines are over-plotted.
+        The left panels show each face's geometrical views, while 
+        the right panels show
+        the detailed picture of the diagonal planes.
+        All simulations are performed on a \( 256 \times 256 \times 256 \) grid resolution,
+        solved with RK4 (\textbf{top}) and SF-PIF4 (\textbf{bottom}) solvers.
+        The Courant condition, \( C_{\text{cfl}} = 0.3 \) is used for
+        calculating the timestep.
+    }\label{fig:3drp}
+\end{figure}
+
+The results of 3D Riemann problem solved with RK4 and SF-PIF4 are
+illustrated in~\cref{fig:3drp}. The solutions were resolved on a
+\( 256 \times 256 \times 256 \) grid resolution.
+The pseudo-color map ranges between \( [0.5, 2.65] \),
+and 40 levels of contour lines are over-plotted using the same range.
+As depicted in~\cref{fig:3drp}, each surface of 3D computational domain
+evolves different 2D Riemann problems, including the diagonal plane which is
+separately plotted on the left panel.
+The recursive SF-PIF4 method is able to capture all the important features as much as the RK4 result,
+confirming the validity of the SF-PIF4 method in 3D simulation with strong shocks.
+
+\begin{table}
+    \footnotesize
+    \centering
+    \caption{Performance results for the 3DRP test problem.
+        All performance results (measured in seconds) are averaged over
+        five simulation runs conducted on 16 nodes.% of \textit{lux} cluster.
+        Each node has 2 \( \times \) 20-core Intel Xeon Gold 6248 (Cascade Lake) CPUs,
+        and the simulation utilized 512 parallel threads for each run.
+    }\label{table:3drp}
+    \begin{adjustbox}{width=\textwidth}
+        \begin{tabular}{@{}cccccccccccc@{}}
+            \toprule
+            \multirow{2}{*}{Grid Resolution} & \multicolumn{2}{l}{RK3} &  & \multicolumn{2}{l}{SF-PIF3}
+                    & & \multicolumn{2}{l}{RK4} & & \multicolumn{2}{l}{SF-PIF4} \\
+            \cmidrule(lr){2-3} \cmidrule(l){5-6} \cmidrule(l){8-9} \cmidrule(l){11-12}
+            & CPU Time & Speedup &  & CPU Time & Speedup & & CPU Time & Speedup & & CPU Time & Speedup\\
+            \midrule
+            \( 64 \times 64 \times 64 \)   & \SI{1.79}{\second} & 1.0 &  & \SI{1.09}{\second} & 0.61 & &
+                \SI{2.95}{\second} & 1.64 &  & \SI{2.67}{\second} & 1.49 \\
+            \( 128 \times 128 \times 128 \) & \SI{15.62}{\second} & 1.0 &  & \SI{7.63}{\second} & 0.49 & &
+                \SI{25.88}{\second} & 1.66 &  & \SI{18.97}{\second} & 1.21 \\
+            \( 256 \times 256 \times 256 \) & \SI{191.00}{\second}   & 1.0 &  & \SI{82.02}{\second} & 0.43 & &
+                \SI{321.34}{\second} & 1.68 &  & \SI{201.40}{\second} & 1.05 \\
+            \( 512 \times 512 \times 512 \) & \SI{2679.85}{\second}  & 1.0 &  & \SI{1173.54}{\second} & 0.44 & &
+                \SI{4507.88}{\second} & 1.68 &  & \SI{2817.78}{\second} & 1.05 \\
+        \end{tabular}
+    \end{adjustbox}
+\end{table}
+
+\cref{table:3drp} shows the performance results for the 3D Riemann problem test
+on four grid resolutions.
+As shown in the table, the SF-PIF4 method demonstrates nearly the same performance
+as the \textit{third}-order RK method, especially in high-resolution cases.
+It is important to note that the performance gains from the SF-PIF methods
+are more compensated on the high-resolution grids,
+which are indispensable for high fidelity physical simulation studies.
 
 \section{SF-PIF method with GP-WENO}\label{sec:result_gpweno}
 
+As mentioned in~\cref{chap:sfpif}, the SF-PIF method is an entirely independent temporal solver,
+which does not require any modification in the spatial high-order part of the simulation codes
+alike RK methods.
+As the purpose of demonstrating the portability of the SF-PIF method,
+this section will conduct several test problems using GP-WENO
+(instead of the conventional WENO as in the previous sections) described in~\cref{subsec:gp}
+as a spatial high-order reconstruction method
+combining with SF-PIF methods for time integration strategy.
+
 \subsection{Hyperparameters}\label{subsec:hyper_params_gpweno}
+
+Unlike the polynomial-based reconstruction schemes,
+the GP method lacks any analytical considerations of the behavior of numerical errors
+with respect to the grid resolutions.
+This is further complicated by the use of nonlinear weighting in the GP-WENO method,
+which is necessary to capture the discontinuities appropriately.
+Consequently, direct numerical experiments
+should be conducted to predict the numerical errors from the GP-WENO method.
+
+The GP-WENO method has two hyperparameters that need to be tuned,
+the length hyperparameter \( \ell \)
+and the shock-capturing hyperparameter \( \sigma \).
+The numerical errors from the 2D vortex advection problem
+with varying hyperparameters are illustrated in~\cref{fig:gp_hp_cmap}.
+The simulations are conducted on \( 400 \times 400 \) grid resolutions,
+resolved with SF-PIF3 temporal solver
+with the same setup in~\cref{subsec:vortex_weno}.
+As dotted white lines represent,
+the minimum error has been found with \( \ell = \sigma = 1\)
+for this systematic test.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.85\textwidth]{fig/hp_cmap_gp2_sf3.png}
+    \caption{The log of \( L_{1} \) errors of vortex advection problem solved by
+        GP-WENO and SF-PIF3 on a \( 400 \times 400 \) grid resolution.
+        The radius of GP-WENO stencil is \( r=2 \), which is the same
+        stencil size of the fifth-order WENO method.
+        The white dotted-lines are represent the
+        hyperparameters of minimum error.
+    }\label{fig:gp_hp_cmap}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \begin{subfigure}{70mm}
+        \centering
+        \includegraphics[width=0.95\textwidth]{fig/hp_best_ell_gp2_sf3}
+    \end{subfigure}
+    \begin{subfigure}{70mm}
+        \centering
+        \includegraphics[width=0.95\textwidth]{fig/hp_best_sig_gp2_sf3}
+    \end{subfigure}
+    \caption{The slices of~\cref{fig:gp_hp_cmap} at the minimum error.
+        The horizontal dotted line is the target error obtained from WENO method
+        with same configurations.
+    }\label{fig:gp_hp_best}
+\end{figure}
+
+\cref{fig:gp_hp_best} shows the slice plots by following the dotted lines
+in~\cref{fig:gp_hp_cmap}, showing the \( L_{1} \) errors
+with the best choice of \( \ell \) and \( \sigma \).
+Surprisingly, the shock-capturing hyperparameter \( \sigma \) affects the solution accuracy,
+even though the solution is entirely smooth.
+Theoretically speaking, the vortex advection test is a nonlinear smooth problem,
+and \( \sigma \) only plays a role in the presence of a shock discontinuity;
+thus, it has to have the same errors across all sigma values.
+The different errors with varying sigma in the smooth problem are the indication
+of numerical errors in calculating nonlinear weights of GP-WENO\@.
+This could be arisen from calculating the linear weights,
+(i.e., solving the overdetermined system~\cref{eq:gp_weno_overdetermined_matrix})
+or calculating smoothness indicators in~\cref{eq:gp_smoothness_ind},
+which requires further studies.
+Nonetheless, since the numerical solvers are involved in calculating
+both the linear weights and smoothness indicators,
+e.g., least square method and QR algorithm,
+numerical errors are inevitable in GP-WENO nonlinear weights.
+
+
+
 
 \subsection{2D Riemann problem: Configuration 3}\label{subsec:2drp_c3_gp}
 
