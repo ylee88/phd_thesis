@@ -1,1 +1,106 @@
 \chapter{Conclusion}\label{ch:conclusion}
+
+A new high-order numerical method solving the conservative system of
+the partial differential equation has been developed under the finite difference formulation.
+The proposed high-order discretization strategy, the SF-PIF method,
+has been tested with several benchmark problems
+and demonstrated high-order accuracy and fast performance.
+The SF-PIF method provides an efficient way to update the solution
+in high-order accuracy without significant efforts to implement it into the existing code. 
+
+The third-order in temporal PIF method was originally proposed in~\cite{seal2016explicit},
+and it furnishes an efficient single-stage time integration strategy in the finite difference discretization.
+Based on the Lax-Wendroff/Cauchy-Kowalevski procedures, the PIF method converts
+the time derivatives into spatial derivatives,
+ensuring the explicit form of the time-Taylor series.
+However, the tight coupling between the spatial and temporal derivatives
+requires the flux Jacobian and Hessian tensors.
+The flux Jacobians' high-order derivatives are highly dependent on the system of equations;
+hence extending the PIF method to higher than fourth-order or implementing it to other systems
+is less attractive and requires effort compared to the traditional multi-stage Runge-Kutta methods.
+
+The system-free approach can resolve this issue. The system-free approach provides
+a numerical strategy to approximating the tensor contractions
+between high-order derivatives of Jacobian tensors and arbitrary vectors
+instead of deriving the analytical form of Jacobian-\textit{like} terms.
+This new design concept is combined with the original PIF method offering
+better portability and extensibility.
+The system-free PIF method, SF-PIF method, demonstrated that the numerical approximation
+of the tensor contractions does not affect the solution's accuracy and stability.
+In the various numerical test results presented in~\cref{sec:result_performance},
+the original SF-PIF method produces nearly identical solutions from the PIF method,
+maintaining the overall quality of numerical solutions.
+As a result, the original SF-PIF method provides an alternative way
+to achieve high-order temporal accuracy in the finite difference method,
+guaranteeing the same numerical characteristics as the PIF method.
+
+The main concept of designing the system-free approach is to make a numerical method
+independent of the system of equations. As described by its name, the system-free method
+is entirely independent of the system of equations;
+thus, it can be implemented to any other system without a hassle.
+The system independence feature of the system-free method is a unique characteristic
+among the conventional Lax-Wendroff type schemes that generally require
+modifying the code to change the system of equations.
+In~\cref{subsec:shallow}, the SF-PIF method demonstrates that
+it can be applied to other simulation codes~--~from the Euler equations solver
+to the Shallow Water equation solver~--~without changing the numerical part of the code.
+
+However, the original system-free approach demands one additional step
+to finalizing the approximation of the tensor contraction,
+which makes the system-free approach less extensible to higher than third-order schemes.
+The modification step is originated from the discrepancy between
+the numerical strategies to approximating tensor contractions of the same vectors and different vectors,
+and it requires an exponentially increasing amount of computational costs
+in extending to the higher-order scheme.
+In this regard, an improved numerical strategy
+for the system-free approach is needed for the fourth-order extension of the PIF method.
+
+The recursive version of the system-free method is then proposed.
+Instead of directly building approximations for high-order derivatives of the flux Jacobians,
+the improved system-free method applies the Jacobian-vector contraction recursively,
+avoiding further modifications to handling different vector cases.
+Theoretically speaking, the recursive system-free method can approximate rank-4 tensor contractions
+more than three times faster than the original system-free method.
+Moreover, the recursive system-free method has more compact code structures as well.
+Needless to say, the recursive strategy does not degrade the quality of numerical solutions.
+
+The PIF method is a purely high-order temporal scheme,
+meaning any spatial high-order reconstruction/interpolation schemes can be combined.
+Initially, the PIF method uses the conventional fifth-order WENO reconstruction method,
+which is one of the most popular high-order reconstruction methods in the CFD community.
+GP-WENO method, on the other hand, is another class of high-order reconstruction scheme proposed recently.
+Unlike the conventional reconstruction schemes based on the piecewise polynomials,
+the GP-WENO method utilizes the Gaussian process (GP) to estimating the data at unknown points in a stochastic way.
+GP-WENO method brings the nonlinear weighting idea from the conventional WENO method
+in order to capture the shock discontinuities appropriately,
+which is inevitable in nonlinear fluid simulations.
+GP-WENO was firstly introduced under the finite volume method and
+the primitive variable-based finite difference method,
+but the conventional finite difference formulation.
+In~\cref{sec:result_gpweno}, several numerical tests demonstrate that
+the GP-WENO method provides comparably accurate solutions in the finite difference discretization,
+maintaining the fast performance of the SF-PIF methods.
+Adopting the GP-WENO into the conventional finite difference formulation demands
+additional fine-tuning on the hyperparameters,
+which it remained as a further study for this dissertation.
+
+The system-free approach enables the fourth-order single-stage time integration schemes in a better efficient way.
+Many high-order research articles in the CFD community designed a ``high-order'' method
+by combining mediocre lower-order temporal solver with higher-order spatial solver,
+e.g., third-order in temporal, fifth-order spatial in the original PIF method.
+It is widely known in the CFD community that the developments of small-scale fluid features
+relevant to grid scales depend much more sensitively on the choice of spatial solvers
+rather than the temporal solver.
+However, as discussed in~\cref{subsec:vortex_weno}, the numerical errors of the temporal solver
+dominate the spatial errors on the high-resolution grid configurations,
+leading to the degradations of the overall solution accuracy.
+This phenomenon should be considered in performing the large-scale simulations
+conducted on a high-resolution grid to capture small-scale physics.
+
+The system-free approach is not explicitly designed for the PIF method nor the CFD solvers.
+The sole purpose of the system-free method is to approximate the tensor contractions
+for high-order derivatives of Jacobians;
+thus, it can be applied to any other physics models which need derivations of Jacobians.
+Like the SF-PIF methods presented in this dissertation,
+the system-free strategy could provide better high-order numerical approximations
+in efficiency, flexibility, and portability.

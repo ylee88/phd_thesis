@@ -907,10 +907,12 @@ for this systematic test.
 \begin{figure}
     \centering
     \includegraphics[width=0.85\textwidth]{fig/hp_cmap_gp2_sf3.png}
-    \caption{The log of \( L_{1} \) errors of vortex advection problem solved by
+    \caption{The \( L_{1} \) errors of vortex advection problem solved by
         GP-WENO and SF-PIF3 on a \( 400 \times 400 \) grid resolution.
         The radius of GP-WENO stencil is \( r=2 \), which is the same
         stencil size of the fifth-order WENO method.
+        Using other temporal solvers produces the same pattern,
+        and omitted in this study.
         The white dotted-lines are represent the
         hyperparameters of minimum error.
     }\label{fig:gp_hp_cmap}
@@ -948,13 +950,103 @@ or calculating smoothness indicators in~\cref{eq:gp_smoothness_ind},
 which requires further studies.
 Nonetheless, since the numerical solvers are involved in calculating
 both the linear weights and smoothness indicators,
-e.g., least square method and QR algorithm,
+e.g., the least square method and QR algorithm,
 numerical errors are inevitable in GP-WENO nonlinear weights.
 
+Notwithstanding the fact that the GP-WENO method with \( \sigma = 1 \)
+has the smallest amount of \( L_{1} \) errors
+from the previous tests, however,
+another numerical tests argue that the large \( \sigma \) values
+degrade the solution accuracy in high-resolution simulation.
+
+\begin{figure}
+    \centering
+    \begin{subfigure}{70mm}
+        \centering
+        \includegraphics[width=0.95\textwidth]{fig/gp2_vortex_error_sigma1}
+    \end{subfigure}
+    \begin{subfigure}{70mm}
+        \centering
+        \includegraphics[width=0.95\textwidth]{fig/gp2_vortex_error_sigma1}
+    \end{subfigure}
+    \caption{The convergence rate of GP-WENO method with \( r=2 \) obtained by solving
+        2D isentropic vortex advection problem on varying grid resolutions.
+        Two temporal methods, SF-PIF3 and SF-PIF4 are used for integrating the solution,
+        and the behavior of third-order and fourth-order temporal schemes
+        is identical to the results from~\cref{subsec:vortex_weno}.
+        The GP length hyperparameters, \( \ell = 1 \) is used for both tests.
+        \noter{need to update the figure}
+    }\label{fig:gp_vortex_convergence}
+\end{figure}
+
+\cref{fig:gp_vortex_convergence} shows that the GP-WENO method's hyperparameter \( \sigma \)
+affects the convergence rate significantly.
+As shown in the left panel of~\cref{fig:gp_vortex_convergence},
+the GP-WENO method with the choice of \( \sigma = 1 \) can not retain
+the expected order of convergence rate
+in high-resolution regimes
+both with SF-PIF3 and SF-PIF4 methods.
+On the other hand, the choice of \( \sigma = 0.3 \) on the right panel of~\cref{fig:gp_vortex_convergence}
+shows similar performance results as in the discussions of~\cref{subsec:vortex_weno}.
+\noter{update more with table}
 
 
+\subsection{Strong shock vortex interaction}\label{subsec:shock_vortex}
 
-\subsection{2D Riemann problem: Configuration 3}\label{subsec:2drp_c3_gp}
+In order to test GP-WENO's numerical capability to capturing
+a complex flow patterns with both smooth regions and discontinuous shock waves,
+the strong shock vortex interaction test~\cite{cheng2019two,galbraith5th} is considered.
+Initially, a Mach 1.5 stationary shock is present at \( x = 0.5 \),
+and the vortex is located at the center of \( (x_{c}, y_{c}) = (0.25, 0.5) \).
+As the simulation evolves, the vortex moves with the background flow,
+which is traveling toward to a stationary shock.
+Consequently, the vortex penetrates the stationary shock,
+evolving complex fluid structures of the ``squeezed'' vortex.
+The computational domain is a 2D rectangle box of \( [0,2]\times[0,1] \)
+with an inflow boundary on the left and an outflow boundary on the right.
+Bottom and top boundaries are reflected walls.
 
-\noter{what else...}
+\begin{figure}
+    \centering
+    \begin{subfigure}{120mm}
+        \centering
+        \includegraphics[width=0.95\textwidth]{fig/shockvortex_gp_ed20_sd5.png}
+    \end{subfigure}
+    \begin{subfigure}{120mm}
+        \centering
+        \includegraphics[width=0.95\textwidth]{fig/shockvortex_gp_ed20_sd10.png}
+    \end{subfigure}
+    \begin{subfigure}{120mm}
+        \centering
+        \includegraphics[width=0.95\textwidth]{fig/shockvortex_gp_ed20_sd20.png}
+    \end{subfigure}
+    \caption{The density colormaps of the strong shock vortex interaction problem.
+        The GP-WENO (\( r = 2 \)) + SF-PIF3 method
+        are used for all simulation runs
+        on \( [1024 \times 512] \) grid resolution
+        with varying hyperparameter, \( \sigma/\Delta \).
+        The pseudo-colors represent the density map ranging between \( [0.75, 2.2] \),
+        and 200 contour lines within the same range are over-plotted as solid black lines.
+    }\label{fig:shockvortex}
+\end{figure}
 
+The results of the simulation of the GP-WENO method with varying \( \sigma \)
+are presented in~\cref{fig:shockvortex}.
+The SF-PIF3 method is used as a temporal method on a \( [1024 \times 512] \) grid resolution.
+The obtained solutions with GP-WENO and SF-PIF3 methods are
+well-comparable with the reference solution presented in~\cite{cheng2019two,galbraith5th}.
+The GP hyperparameters are normalized with the grid scale \( \Delta \),
+as suggested in~\cite{reyes2018new,reyes2019variable}.
+The length-scale hyperparameters, \( \ell/\Delta = 20 \) is taken
+based on the results of the previous section
+(e.g., \( \ell/\Delta = 20 \) is equivalent to \( \ell = 1 \) with the vortex problem of \( 400 \times 400 \) resolution grid)
+and various shock-capturing hyperparameters, \( \sigma/\Delta = 5, 10, \) and \( 20 \) are tested.
+
+As shown in~\cref{fig:shockvortex}, the higher values of \( \sigma/\Delta \) is better
+to capture the small-scale fluid structures, especially on the trailing waves of the vortex
+around \( 0.5 \le x \le 1 \).
+However, as discussed in~\cref{subsec:2drp_c3_weno} before,
+identifying the numerical artifacts in the small-scale fluids is not feasible
+without extensive numerical tests.
+At a minimum, it is safe to say that the larger \( \sigma \) values
+can produce less dissipative numerical solutions capturing the small-scale structures.
