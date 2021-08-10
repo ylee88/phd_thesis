@@ -25,6 +25,8 @@ All test results in this section use the standard fifth-order WENO-JS method (\c
 for the spatially high-order reconstruction scheme.
 Therefore, the expected truncation error is \( \mathcal{O}(\Delta s^{5}, \dt^{q}) \),
 where \( q \) is the order of the temporal scheme.
+In this section, \( C_{\text{cfl}} = 0.7 \) is used for all 1D simulation results,
+and \( C_{\text{cfl}} = 0.4 \) is used for 2D simulation runs.
 
 \subsection{Sine wave advection}\label{subsec:sine_wave}
 
@@ -444,7 +446,8 @@ turn the jet into a less narrow and less elongated shape along the diagonal.
         \includegraphics[width=0.95\textwidth]{fig/implosion_rk3.png}
     \end{subfigure}
     \caption{The density profile of the implosion test
-        with oSF-PIF3 (left) and with RK3 (right).
+        with oSF-PIF3 (\textbf{left}) and with RK3 (\textbf{right})
+        resolved on \( 400 \times 400 \) grid resolution.
         The color map ranges from \( 0.3 \) to \( 1.2 \), and
         40 evenly-spaced contour lines are over-plotted with
         the same range.
@@ -573,6 +576,8 @@ All simulations are performed with third-order and fourth-order \textit{recursiv
 coupled with the traditional fifth-order WENO method described in~\cref{subsec:weno}.
 2D simulations are carried out on high grid resolutions
 to emphasize the numerical effects of the temporal solver, as discussed in~\cref{subsec:vortex_weno}.
+The Courant condition with \( C_{\text{cfl}} = 0.4 \) is used for all 2D simulations
+otherwise specified.
 
 \subsection{The Shu-Osher problem (rotated \(\ang{45}\))}\label{subsec:shu45_weno}
 
@@ -620,7 +625,7 @@ Explicitly, the initial condition is given as,
         at \( t=0 \) and \( t=1.8 \). The test was performed on a 2D simulation box
         of \(1024 \times 1024 \) resolution with the SF-PIF4 method.
         The solid black line represents the shock propagating direction, \( x_{\parallel} \),
-        and squares divide the line in each quartile.
+        and square markers divide the line in each quartile.
     }\label{fig:shu45_cmap}
 \end{figure}
 

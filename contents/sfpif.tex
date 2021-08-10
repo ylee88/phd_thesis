@@ -796,10 +796,12 @@ where
 \end{equation}
 for the fourth-order PIF method,
 \begin{equation}\label{eq:sf_source_4order}
-    \bS^{appx, 4} (\bx) = \bS (\bx, t^{n})
-        + \left. \frac{\Delta t}{2!} \partial_{t}^{(1)} \bS (\bx, t) \right|_{t = t^{n}}
-        + \left. \frac{\Delta t^{2}}{3!} \partial_{t}^{(2)} \bS (\bx, t) \right|_{t = t^{n}}
-        + \left. \frac{\Delta t^{3}}{4!} \partial_{t}^{(3)} \bS (\bx, t) \right|_{t = t^{n}}.
+    \begin{split}
+        \bS^{appx, 4} (\bx) = \bS (\bx, t^{n})
+            &+ \left. \frac{\Delta t}{2!} \partial_{t}^{(1)} \bS (\bx, t) \right|_{t = t^{n}}\\
+            &+ \left. \frac{\Delta t^{2}}{3!} \partial_{t}^{(2)} \bS (\bx, t) \right|_{t = t^{n}}
+            + \left. \frac{\Delta t^{3}}{4!} \partial_{t}^{(3)} \bS (\bx, t) \right|_{t = t^{n}}.
+    \end{split}
 \end{equation}
 
 In order to modify the conventional PIF procedures
@@ -808,8 +810,12 @@ in~\cref{sec:pif}, consider a modified flux divergence \( \Divs \) defined as,
 \begin{equation}\label{eq:sf_source_divs}
     \Divs \coloneqq \Div - \bS.
 \end{equation}
-Then, the time derivatives of the source term can be calculated through
-the LW/CK procedures as,
+% Then, the time derivatives of the source term can be calculated through
+% the LW/CK procedures as,
+Then, the time derivatives of the source term have similar expressions
+as the time derivatives of the flux function,
+e.g., \( \bF_{t}, \bF_{tt}, \) and \( \bF_{ttt} \) in~\cref{eq:pif_Ft,eq:pif_Ftt,eq:pif_Fttt},
+through the LW/CK procedures:
 \begin{equation}\label{eq:sf_source_St}
     \bS_{t} = -\bS_{\bU} \Divs,
 \end{equation}
@@ -851,7 +857,7 @@ the high-order time derivatives of the flux functions, e.g., \( \bF_{t}, \bF_{tt
 in \cref{eq:pif_flux_4order}
 should be adjusted with the modified flux divergence, \( \Divs \).
 The governing equation~\cref{eq:sf_source_gov} leads
-the adjusted first time derivative as,
+the adjusted first-order time derivative of the flux as,
 \begin{equation}\label{eq:sf_source_Ft}
     \bF_{t} = -\bF_{U} \Divs.
 \end{equation}

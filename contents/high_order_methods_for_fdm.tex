@@ -871,7 +871,7 @@ In the original Lax-Wendroff method~\cite{lax1959systems} used an approximation 
 \frac{1}{\dx}\left( \left.\pd{\bF}{\bU} \right|_{\iph} \cdot \pd{\bF}{x} - \left.\pd{\bF}{\bU} \right|_{\imh} \cdot \pd{\bF}{x} \right) \),
 but it is possible to get an explicit form as,
 \begin{equation}\label{}
-    \pdd{\bU}{t} = \pd{}{x} \left( \pd{\bF}{\bU} \cdot \pd{\bF}{x} \right) = \pdd{\bF}{\bU} \cdot \pd{\bF}{x} + \pd{\bF}{\bU} \cdot \pdd{\bF}{x},
+    \pdd{\bU}{t} = \pd{}{x} \left( \pd{\bF}{\bU} \cdot \pd{\bF}{x} \right) = \pdd{\bF}{\bU} \cdot \pd{\bU}{x} \cdot \pd{\bF}{x} + \pd{\bF}{\bU} \cdot \pdd{\bF}{x},
 \end{equation}
 with flux Hessian tensor, \( \pdd{\bF}{\bU} \).
 
