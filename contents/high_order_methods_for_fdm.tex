@@ -938,3 +938,72 @@ This becomes hugely attractive in massively parallel computing, minimizing the c
 of data transfers between processors each time step, which would need to be repeated for each intermediate RK stage.
 On the other hand, the dependence of the strong coupling on analytic derivatives
 of the governing PDEs makes the LW/CK approach less flexible and less broadly applicable to all systems of PDEs.
+
+
+
+
+
+\section{Conclusion}\label{sec:high_order_conclusion}
+
+The high-order discretization methods promote better solution accuracy in the given grid resolutions.
+In order to achieve high-order accuracy of the conservative system,
+high-arithmetic-intensity numerical models should be accomplished
+both in spatial and temporal axes.
+
+Under the finite difference formulation,
+the high-order reconstruction methods play a role in discretizing the spatial axis
+with better solution accuracy by estimating the pointwise data with given volume-averaged quantities.
+The high-order reconstruction schemes for CFD solvers are also required to have TVD property
+to reduce the numerical oscillations near the discontinuous profiles.
+The general strategy is to reduce the order of accuracy locally where the given profile is discontinuous.
+The conventional WENO method constructs
+the piecewise polynomials by taking the convex combinations of sub-polynomials with nonlinear weightings.
+
+The WENO method
+\begin{itemize}
+    \item achieves high-order accuracy by constructing the piecewise polynomials, and
+    \item measures the smoothness of the given data by calculating spatial derivatives of the reconstructed profiles.
+\end{itemize}
+
+GP-WENO method is another class of non-polynomial-based reconstruction strategy
+utilizing the Gaussian Process.
+The GP reconstruction is based on the conventional GP regression scheme,
+with modifications of the kernel function
+to adopt the data type conversion from volume-averaged to pointwise.
+The GP method provides a more compact mathematical framework
+compared to the piecewise polynomial-based reconstruction methods.
+A similar non-oscillatory strategy is taken from the conventional WENO method,
+but in this case, the smoothness indicator should be accomplished without the reconstructed polynomials.
+
+The GP-WENO method
+\begin{itemize}
+    \item estimates the data at the point of interest by utilizing the stochastic process, GP regression, and
+    \item measures the smoothness of given data by evaluating the marginal likelihood function.
+\end{itemize}
+
+On the other hand, the high-order temporal schemes for the finite difference method
+advance the solution to the next timestep in a highly accurate manner.
+The most famous temporal solver in the CFD community is
+the strong stability preserving Runge-Kutta (SSP-RK) method.
+The SSP-RK method is based on the conventional RK scheme,
+with different coefficients to ensure TVD property in each sub-stage.
+
+The SSP-RK method
+\begin{itemize}
+    \item achieves high-order temporal accuracy by integrating the solution in multi-stages,
+    \item has a compact and portable mathematical structure, but
+    \item needs to perform the high-order reconstruction method in each sub-stage which requires a substantial amount of computational costs.
+\end{itemize}
+
+The Lax-Wendroff type scheme is another way to achieve high-order temporal accuracy in discretizing conservative system.
+The Lax-Wendroff type methods construct a Taylor series of the solution in the temporal axis
+and utilize the LW/CK procedure to obtain the explicit form of temporal derivatives.
+By building an explicit form of the time-Taylor series,
+the Lax-Wendroff type method is able to update the solution in a single step
+while maintaining high-order temporal accuracy.
+
+The Lax-Wendroff type scheme is
+\begin{itemize}
+    \item able to update the solution in a highly accurate manner within a single step, but
+    \item less attractive and less flexible due to the need for the high-order derivatives of the flux Jacobian, which are highly dependent on the system of equations.
+\end{itemize}

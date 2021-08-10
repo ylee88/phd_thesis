@@ -258,7 +258,8 @@ the solution accuracy, contradicting the intended motivation.
         and the computation times for the vortex advection test
         solved using RK3 and SF-PIF3 methods (\textbf{top});
         using RK4 and SF-PIF4 methods (\textbf{bottom}).
-        All simulation runs are performed on the four 20-cores
+        All simulation runs are equipped with WENO5 spatial method,
+        performed on the four 20-cores
         Cascade Lake Intel Xeon processors, utilized 64 parallel threads.
         CPU times are measured in seconds, averaged over 10 individual runs.
     }\label{table:vortex_weno_fourth}
@@ -835,7 +836,6 @@ The recursive SF-PIF4 method is able to capture all the important features as mu
 confirming the validity of the SF-PIF4 method in 3D simulation with strong shocks.
 
 \begin{table}
-    \footnotesize
     \centering
     \caption{Performance results for the 3DRP test problem.
         All performance results (measured in seconds) are averaged over
@@ -967,15 +967,21 @@ degrade the solution accuracy in high-resolution simulation.
     \end{subfigure}
     \begin{subfigure}{70mm}
         \centering
-        \includegraphics[width=0.95\textwidth]{fig/gp2_vortex_error_sigma1}
+        \includegraphics[width=0.95\textwidth]{fig/gp2_vortex_error_sigma03}
     \end{subfigure}
     \caption{The convergence rate of GP-WENO method with \( r=2 \) obtained by solving
         2D isentropic vortex advection problem on varying grid resolutions.
         Two temporal methods, SF-PIF3 and SF-PIF4 are used for integrating the solution,
         and the behavior of third-order and fourth-order temporal schemes
         is identical to the results from~\cref{subsec:vortex_weno}.
-        The GP length hyperparameters, \( \ell = 1 \) is used for both tests.
-        \noter{need to update the figure}
+        The GP length hyperparameters, \( \ell = 1 \) is used for both tests,
+        and the shock-capturing hyperparameter
+        \textbf{Left:} \( \sigma = 1 \), and \textbf{Right:} \( \sigma = 0.3 \)
+        are used.
+        The tests with \( \sigma = 1 \) on the left panel have smaller absolute \( L_{1} \) error,
+        but failed to maintaining the convergence rate on high-resolution grids.
+        On the other hand, tests with \( \sigma = 0.3 \) demonstrate consistent
+        convergence rate on all grid configurations.
     }\label{fig:gp_vortex_convergence}
 \end{figure}
 
@@ -987,8 +993,55 @@ the expected order of convergence rate
 in high-resolution regimes
 both with SF-PIF3 and SF-PIF4 methods.
 On the other hand, the choice of \( \sigma = 0.3 \) on the right panel of~\cref{fig:gp_vortex_convergence}
-shows similar performance results as in the discussions of~\cref{subsec:vortex_weno}.
-\noter{update more with table}
+shows similar performance results as in the discussions of~\cref{subsec:vortex_weno},
+although the absolute magnitudes of \( L_{1} \) errors are slightly larger than
+the case of \( \sigma = 1 \).
+
+\begin{table}
+    \centering
+    \caption{The \( L_{1} \) errors, the rates of convergence,
+        and the computation times for the vortex advection test
+        solved using GP-WENO method with radius of \( r = 2 \).
+        The hyperparameters, \( \ell = 1 \) and \( \sigma = 0.3 \)
+        are used for all simulation based on the results of~\cref{fig:gp_vortex_convergence}.
+        The ``Speedup'' columns represent the relative speed-ups
+        compared to the WENO5 method with corresponding temporal solveers.
+        All simulation runs are
+        performed on the four 20-cores
+        Cascade Lake Intel Xeon processors, utilized 64 parallel threads.
+        CPU times are measured in seconds, averaged over 10 individual runs.
+    }\label{table:vortex_gp2}
+    \begin{adjustbox}{width=\textwidth}
+        \begin{tabular}{@{}ccccclcccc@{}}
+            \toprule
+            \multirow{2}{*}{\( N_{x} = N_{y} \)} & \multicolumn{4}{c}{GP-WENO + SF-PIF3} &  & \multicolumn{4}{c}{GP-WENO + SF-PIF4} \\
+            \cmidrule(lr){2-5} \cmidrule(l){7-10}
+            & \(L_{1}\) error & \(L_{1}\) order & CPU Time & Speedup &  &
+            \(L_{1}\) error & \(L_{1}\) order & CPU Time & Speedup \\ \midrule
+            120  & \num{2.68E-2} & \--- & \SI{0.67}{\second}      & 0.95 &  & \num{2.67E-2} & \--- & \SI{1.36}{\second}     & 0.92 \\
+            200  & \num{4.16E-3} & 3.65 & \SI{2.43}{\second}      & 0.88 &  & \num{4.17E-3} & 3.66 & \SI{4.97}{\second}     & 0.93 \\
+            400  & \num{1.91E-4} & 4.44 & \SI{16.86}{\second}     & 0.85 &  & \num{1.94E-4} & 4.42 & \SI{33.39}{\second}    & 0.93 \\
+            800  & \num{7.12E-5} & 4.75 & \SI{133.79}{\second}    & 0.87 &  & \num{7.07E-6} & 4.78 & \SI{252.08}{\second}   & 0.93 \\
+            1600 & \num{4.05E-7} & 4.14 & \SI{1061.26}{\second}   & 0.88 &  & \num{2.28E-7} & 4.95 & \SI{1944.68}{\second}  & 0.93 \\
+            3200 & \num{4.71E-8} & 3.10 & \SI{8375.05}{\second}   & 0.89 &  & \num{7.48E-9} & 4.93 & \SI{15514.25}{\second} & 0.95 \\
+        \end{tabular}
+    \end{adjustbox}
+\end{table}
+
+The detailed numerics of the GP-WENO's convergence tests are summarized in~\cref{table:vortex_gp2}.
+The all simulation runs are performed with the same configurations of WENO5 tests in~\cref{table:vortex_weno_fourth};
+thus, the ``Speedup'' columns portray the relative speed-ups of GP-WENO method
+compared to the conventional fifth-order WENO method.
+The GP-WENO method with appropriately selected hyperparameters
+produces less \( L_{1} \) errors and better convergence rate
+with the high-order temporal method, SF-PIF4.
+On the other hand, the GP-WENO method coupled with the relatively low-order temporal solver, SF-PIF3,
+experiences the convergence rate degradation more faster than the WENO5.
+
+
+
+
+
 
 
 \subsection{Strong shock vortex interaction}\label{subsec:shock_vortex}
