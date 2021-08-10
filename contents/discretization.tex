@@ -34,21 +34,21 @@ In the Euler equations, the conserved variables and the flux functions are defin
         \rho v \\
         \rho w \\
         E
-    \end{bmatrix},\quad
+    \end{bmatrix},\;
     \bF (\bU) = \begin{bmatrix}
         \rho u \\
         \rho u^{2} + p \\
         \rho u v \\
         \rho u w \\
         u \left( E + p \right)
-    \end{bmatrix},\quad
+    \end{bmatrix},\;
     \bG (\bU) = \begin{bmatrix}
         \rho v \\
         \rho u v \\
         \rho v^{2} + p \\
         \rho v w \\
         v \left( E + p \right)
-    \end{bmatrix},\quad
+    \end{bmatrix},\;
     \bH (\bU) = \begin{bmatrix}
         \rho w \\
         \rho u w \\
@@ -140,7 +140,7 @@ using \( p \)-th order accurate reconstruction operator \( \mathcal{R}(\cdot) \)
     \bU^{\text{L}}_{\iph,j,k} = \mathcal{R}(\overline{\bU}_{i-r,j,k}, \dots, \overline{\bU}_{i+r,j,k}) + \mathcal{O} (\dx^{p}).
 \end{equation}
 The spatial order of accuracy, \( p \), of the FVM solver is thereby determined by choice of the reconstruction operator, \( \mathcal{R}(\cdot) \)
-which will be discussed in \noter{find my ref!}.
+which will be discussed in~\cref{sec:recons}.
 
 It is important to note that the numerical flux resulting from the Riemann solver
 is also a pointwise representation, while the surface-averaged fluxes
@@ -214,7 +214,7 @@ as input. Namely, this can be written as
     \xi \in [x_{\imh}, x_{\imh}],
 \end{equation}
 where \( \mathcal{R}(\cdot) \) is a $p$-th order accurate reconstruction operator
-that used for FVM formulation in~\cref{sec:fvm}, and will be discussed in \noter{find my ref!}.
+that used for FVM formulation in~\cref{sec:fvm}, and will be discussed in~\cref{sec:recons}.
 
 Contrary to FVM, the conservative FDM uses only the pointwise values for constructing numerical strategies,
 not requiring the data conversion between pointwise and volume-averaged quantities.

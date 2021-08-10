@@ -98,7 +98,7 @@ is approximated as,
         &= \bF (\bx, t^{n})
             + \left. \frac{\Delta t}{2!} \partial_{t}^{(1)} \bF (\bx, t) \right|_{t = t^{n}}
             + \left. \frac{\Delta t^{2}}{3!} \partial_{t}^{(2)} \bF (\bx, t) \right|_{t = t^{n}}
-            + \left. \frac{\Delta t^{3}}{4!} \partial_{t}^{(3)} \bF (\bx, t) \right|_{t = t^{n}}
+            % + \left. \frac{\Delta t^{3}}{4!} \partial_{t}^{(3)} \bF (\bx, t) \right|_{t = t^{n}}
             + \cdots \\
         &= \sum\limits_{i=0}^{q-1}
             \left.\frac{\dt^{i}}{(i+1)!} \partial_{t}^{(i)} \bF (\bx, t) \right|_{t = t^{n}} + \mathcal{O}(\Delta t^{q}) \\
@@ -132,10 +132,12 @@ the fourth-order approximated time-averaged flux in the \( x \)-direction, \( \b
 from the Taylor expansion of the pointwise flux around \( t^{n} \).
 As expressed in~\cref{eq:pif_flux_taylor}, the fourth-order PIF method requires
 \begin{equation}\label{eq:pif_flux_4order}
-    \bF^{appx, 4} (\bx) = \bF (\bx, t^{n})
-        + \left. \frac{\Delta t}{2!} \partial_{t}^{(1)} \bF (\bx, t) \right|_{t = t^{n}}
-        + \left. \frac{\Delta t^{2}}{3!} \partial_{t}^{(2)} \bF (\bx, t) \right|_{t = t^{n}}
-        + \left. \frac{\Delta t^{3}}{4!} \partial_{t}^{(3)} \bF (\bx, t) \right|_{t = t^{n}}.
+    \begin{split}
+        \bF^{appx, 4} (\bx) = \bF (\bx, t^{n})
+            &+ \left. \frac{\Delta t}{2!} \partial_{t}^{(1)} \bF (\bx, t) \right|_{t = t^{n}} \\
+            &+ \left. \frac{\Delta t^{2}}{3!} \partial_{t}^{(2)} \bF (\bx, t) \right|_{t = t^{n}}
+            + \left. \frac{\Delta t^{3}}{4!} \partial_{t}^{(3)} \bF (\bx, t) \right|_{t = t^{n}}.
+    \end{split}
 \end{equation}
 The other \( y \)- and \( z \)-directional approximated fluxes,
 \( \bG^{appx, 4} \) and \( \bH^{appx, 4} \),
@@ -274,8 +276,8 @@ The nonlinear weights \( \omega_{m} \) are calculated in the same way
 as the classical WENO-JS reconstruction method in~\cref{eq:weno_nonlin_weights},
 with the same choice of the smoothness indicators, \( \beta_{m} \) in \cref{eq:weno_smoothness_ind}.
 
-Although the fourth-order PIF method requires the second-order derivatives~\cref{eq:pif_central_dfdxx}
-and cross derivatives~\cref{eq:pif_central_dfdxy}; however, using the WENO-\textit{like}
+Although the fourth-order PIF method requires the second-order derivatives, \cref{eq:pif_central_dfdxx},
+and cross derivatives, \cref{eq:pif_central_dfdxy}; however, using the WENO-\textit{like}
 central differencing formula above only for the first-order derivative
 effectively reduces the oscillations of the PIF method.
 Needless to say, the WENO-\textit{like} central differencing~\cref{eq:pif_wenodiff_convex}

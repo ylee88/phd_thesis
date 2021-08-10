@@ -354,7 +354,7 @@ reveals GP prediction with known function samples \( \bff \), which is the \text
 However, in the reconstruction scheme, the known function samples should be given as \textit{volume averaged} quantities,
 not as pointwise values. Therefore, the GP prediction has to be modified to adapt to the data type changes.
 
-Favorably, the volume averaging operator constitutes a linear operation (see~\cref{eq:recon_poly_linear}).
+Favorably, the volume averaging operator constitutes a linear operation (e.g.,~\cref{eq:recon_poly_linear}).
 The linear operations on Gaussian random variables result in new Gaussian random variables with
 linearly transformed mean and covariance; thus, the GP \textit{interpolation} scheme (\cref{eq:gp_intp})
 can be transformed into the GP \textit{reconstruction} scheme
@@ -823,14 +823,15 @@ is the direction of the upwind limiting. Although the computational cost of calc
 
 Spiteri and Ruuth~\cite{spiteri2002new} proposed a five-stage, fourth-order SSP-RK4 method that does not require to use adjoint operator:
 \begin{equation}\label{eq:ssp_rk4}
-    \begin{split}
+\resizebox{1.0\textwidth}{!}
+    {$\begin{split}
         \bU^{(1)} &= \bU^{n} + 0.391752226571890 \dt \mathcal{L}(\bU^{n}), \\
         \bU^{(2)} &= 0.444370493651235 \bU^{n} + 0.555629506348765 \bU^{(1)} + 0.368410593050371 \dt \mathcal{L} (\bU^{(1)}), \\
         \bU^{(3)} &= 0.620101851488403 \bU^{n} + 0.379898148511597 \bU^{(2)} + 0.251891774271694 \dt \mathcal{L} (\bU^{(2)}), \\
         \bU^{(4)} &= 0.178079954393132 \bU^{n} + 0.821920045606868 \bU^{(3)} + 0.544974750228521 \dt \mathcal{L} (\bU^{(3)}), \\
         \bU^{n + 1} &= 0.517231671970585 \bU^{(2)} + 0.096059710526147 \bU^{(3)} + 0.063692468666290 \dt \mathcal{L} (\bU^{(3)}) \\
                     &\quad + 0.386708617503268 \bU^{(4)} + 0.226007483236906 \dt \mathcal{L} (\bU^{(4)}).
-    \end{split}
+    \end{split}$}
 \end{equation}
 In this dissertation, the fourth-order SSP-RK4 method refers the Spiteri and Ruuth method,~\cref{eq:ssp_rk4}.
 
