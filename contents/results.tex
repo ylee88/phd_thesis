@@ -563,7 +563,16 @@ at four different times, \( t = 0.345, 0.69, 1.035, \) and \( 1.38 \).
 
 \section{SF-PIF method with WENO-JS}\label{sec:result_wenojs}
 
-\noter{All recursive SF-PIFs}
+The previous section demonstrates that the original SF-PIF and recursive SF-PIF methods,
+combined with the traditional WENO method,
+generate the highly accurate and stable solution in faster computational time
+compared to the SSP-RK methods.
+This section provides numerical test results from additional benchmark problems,
+both in 2D and 3D, with the presence of strong shock.
+All simulations are performed with third-order and fourth-order \textit{recursive} SF-PIF methods
+coupled with the traditional fifth-order WENO method described in~\cref{subsec:weno}.
+2D simulations are carried out on high grid resolutions
+to emphasize the numerical effects of the temporal solver, as discussed in~\cref{subsec:vortex_weno}.
 
 \subsection{The Shu-Osher problem (rotated \(\ang{45}\))}\label{subsec:shu45_weno}
 
