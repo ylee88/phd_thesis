@@ -31,7 +31,7 @@ with the number of spatial dimensions and the order of accuracy.
 
 
 \section{Picard Integral Formulation}\label{sec:pif}
-Applying the Picard integral formulation (PIF), the governing equations~\cref{eq:gov} can be discretized
+Applying the Picard integral formulation (PIF), the governing equations of the conservative system~\cref{eq:gov} can be discretized
 by taking a time average within a single time step \( \dt \) over an interval \( \left[ t^{n}, t^{n + 1} \right] \),
 \begin{equation}\label{eq:pif_time_avg}
     \bU^{n + 1} = \bU^{n} - \dt \left( \partial_{x} \bF^{avg} + \partial_{y} \bG^{avg} + \partial_{z} \bH^{avg} \right),
