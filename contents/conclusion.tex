@@ -45,6 +45,18 @@ In~\cref{subsec:shallow}, the SF-PIF method demonstrates that
 it can be applied to other simulation codes~--~from the Euler equations solver
 to the Shallow Water equation solver~--~without changing the numerical part of the code.
 
+The system-independence feature can also fuel the extension of the PIF method
+to the nonhomogeneous equation, e.g., the Euler equations with a nonlinear source term.
+The initial effort in extending the mathematical form of the PIF method to the nonhomogeneous equation solver
+has been made in~\cref{sec:sfpif_source}. In this scenario, the new Jacobian-\textit{like} terms
+of the source function are required to maintain the overall temporal accuracy.
+Here, the system-free method can approximate those terms as well,
+in the same mathematical strategy.
+Since the system-free method can be identically applied to any source function,
+modifications of the numerical structures would not be required in the different forms of source terms.
+Testing numerical capabilities of the SF-PIF method with a source term
+is the first prioritized further study for this dissertation.
+
 However, the original system-free approach demands one additional step
 to finalizing the approximation of the tensor contraction,
 which makes the system-free approach less extensible to higher than third-order schemes.
@@ -55,7 +67,7 @@ in extending to the higher-order scheme.
 In this regard, an improved numerical strategy
 for the system-free approach is needed for the fourth-order extension of the PIF method.
 
-The recursive version of the system-free method is then proposed.
+The recursive version of the system-free method is then proposed in~\cref{sec:recursive_sf}.
 Instead of directly building approximations for high-order derivatives of the flux Jacobians,
 the improved system-free method applies the Jacobian-vector contraction recursively,
 avoiding further modifications to handling different vector cases.
@@ -75,7 +87,7 @@ GP-WENO method brings the nonlinear weighting idea from the conventional WENO me
 in order to capture the shock discontinuities appropriately,
 which is inevitable in nonlinear fluid simulations.
 GP-WENO was firstly introduced under the finite volume method and
-the primitive variable-based finite difference method,
+the primitive-variable-based finite difference method,
 but the conventional finite difference formulation.
 In~\cref{sec:result_gpweno}, several numerical tests demonstrate that
 the GP-WENO method provides comparably accurate solutions in the finite difference discretization,
@@ -103,4 +115,5 @@ for high-order derivatives of Jacobians;
 thus, it can be applied to any other physics models which need derivations of Jacobians.
 Like the SF-PIF methods presented in this dissertation,
 the system-free strategy could provide better high-order numerical approximations
-in efficiency, flexibility, and portability.
+in an efficient, flexible, and portable way.
+%감사합니다 땡큐!

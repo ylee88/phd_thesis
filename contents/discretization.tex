@@ -5,7 +5,7 @@ predicting numerical solutions with high-order accuracy.
 This chapter introduces two general ways to discretize the Euler equations,
 which will be of particular interest in this dissertation.
 
-\section{Euler Equations}\label{sec:euler_eqns}
+\section{The Euler equations}\label{sec:euler_eqns}
 
 In three dimensions, the conservation laws may be written as,
 \begin{equation}\label{eq:gov}
@@ -81,7 +81,7 @@ except for the solenoidal constraint of the magnetic field. (\( \nabla \cdot \bB
 Thus, the high-order methods presented in this dissertation can be applied to the MHD simulation code easily.
 
 
-\section{Finite Volume Method}\label{sec:fvm}
+\section{Finite volume method}\label{sec:fvm}
 
 The popular way to consider discretized variables for the conserved system
 is to cast volume integrals to the governing equations, called the finite volume method. (FVM)
@@ -144,7 +144,7 @@ which will be discussed in~\cref{sec:recons}.
 
 It is important to note that the numerical flux resulting from the Riemann solver
 is also a pointwise representation, while the surface-averaged fluxes
-(\( \widetilde{\bF}_{i \pm \half,j,k}, \widetilde{\bG}_{i,j \pm \half,k}, \widetilde{\bH}_{i,j,k \pm \half} \))
+(\( \widetilde{\bF}_{i \pm \half,j,k} \), \( \widetilde{\bG}_{i,j \pm \half,k} \), and \( \widetilde{\bH}_{i,j,k \pm \half} \))
 are needed for FVM formulation as presented in~\cref{eq:fvm_discrete}.
 This should be addressed thoroughly, as a naive approximation of the pointwise flux to
 the surface-averaged flux is bounded by second-order accuracy no matter the accuracy of the Riemann states:
@@ -163,7 +163,7 @@ using linear combinations of Riemann fluxes,~\cite{dumbser2007quadrature,dumbser
 to name a few.
 
 
-\section{Finite Difference method}\label{sec:fdm}
+\section{Finite difference method}\label{sec:fdm}
 
 As it firstly proposed in~\cite{shu1989efficient}, the finite difference method (FDM) seeks a discretization of
 the spatial derivatives of the fluxes in \textit{pointwise} representation.
@@ -222,7 +222,7 @@ In addition, the high-order reconstruction schemes used for constructing Riemann
 can be used for constructing numerical fluxes in FDM
 without intense changes in the simulation code~--~only a simple change in the input variables for the reconstruction operator.
 This simplicity in numerical strategy attracts researchers in the CFD community, leading various adoptions in
-high-order solvers.~\cite{jiang1996efficient,shu1998essentially,mignone2010high,christlieb2015picard,seal2016explicit}
+high-order solvers~\cite{jiang1996efficient,shu1998essentially,mignone2010high,christlieb2015picard,seal2016explicit}.
 
 Compared to FVM, the major difference of FDM is obtaining high-order numerical fluxes
 directly from the reconstruction operator.
@@ -250,13 +250,13 @@ without the additional data type conversions required of conventional FVM.~\cite
 
 Two major discretization strategies for conservative systems have been presented.
 Both the finite difference and finite volume methods are able to achieve
-high-order spatial accuracy by reconstructing volume-averaged quantities to the pointwise values.
+high-order spatial accuracy by reconstructing volume-averaged quantities to pointwise values.
 
 The finite difference method
 \begin{itemize}
     \item evolves the pointwise conserved variables,
     \item provides a straightforward framework without data type conversions,
-    \item requires high-order numerical fluxes constructed from the pointwise, cell-centered physical fluxes directly from the high-order reconstruction methods and
+    \item requires high-order numerical fluxes constructed from the pointwise, cell-centered physical fluxes directly from the high-order reconstruction methods, and
     \item may be delicate with the additional modifications on the numerical fluxes.
 \end{itemize}
 
@@ -264,6 +264,6 @@ The finite volume method
 \begin{itemize}
     \item evolves the volume-averaged conserved variables,
     \item requires rigorous data type conversions to maintain high-order accuracy,
-    \item requires high-order reconstruction of the Riemann states from the cell-centered conserved variables and
+    \item requires high-order reconstruction of the Riemann states from the cell-centered conserved variables, and
     \item guarantees the conservation laws over the whole spatiotemporal domain by design.
 \end{itemize}

@@ -9,7 +9,7 @@ SF-PIF3 and SF-PIF4 will refer to the \textit{recursive} SF method in~\cref{sec:
 with third-order and fourth-order PIF methods, respectively,
 and RK3 and RK4 will refer to the three-stage, third-order SSP-RK method~\cref{eq:ssp_rk3},
 five-stage, fourth-order SSP-RK method~\cref{eq:ssp_rk4}, respectively.
-The original SF approach (\cref{sec:original_sf}) with the PIF method is denoted by oSF-PIF\@.
+The original, \textit{non-recursive} SF approach (\cref{sec:original_sf}) with the PIF method is denoted by oSF-PIF\@.
 The conventional five-point central differencing formulae~\cref{eq:pif_central_dfdx,eq:pif_central_dfdxx,eq:pif_central_dfdxy}
 are used for SF-PIF and PIF methods otherwise specified.
 
@@ -47,7 +47,7 @@ dynamics such as a formation of shocks and rarefactions.
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.85\textwidth]{fig/sine_over_dtReduction}
+    \includegraphics[width=0.75\textwidth]{fig/sine_over_dtReduction}
     \caption{Convergence test for the 1D sine wave advection problem.
         The errors are calculated
         in \( L_{1} \) sense against the initial density profile
@@ -144,21 +144,22 @@ as reported in~\cite{spiegel2015survey}.
 
 \begin{figure}
     \centering
-    \begin{subfigure}{70mm}
+    \begin{subfigure}{\textwidth}
         \centering
-        \includegraphics[width=0.95\textwidth]{fig/vortex_third}
+        \includegraphics[width=0.75\textwidth]{fig/vortex_third}
     \end{subfigure}
-    \begin{subfigure}{70mm}
+    \par\bigskip
+    \begin{subfigure}{\textwidth}
         \centering
-        \includegraphics[width=0.95\textwidth]{fig/vortex_time_third}
+        \includegraphics[width=0.75\textwidth]{fig/vortex_time_third}
     \end{subfigure}
     \caption{The \( L_{1} \) errors of the isentropic vortex advection test problem
         on different grid resolutions, \( N_{x} = N_{y} = 50, 100, 200, \) and \( 400 \).
         The three different third-order temporal schemes
         are used combined with WENO5 spatial method.
         The \( L_{1} \) errors
-        with respect to the grid resolutions (\textbf{left});
-        with respect to the computation time (\textbf{right}).
+        with respect to the grid resolutions (\textbf{top});
+        with respect to the computation time (\textbf{bottom}).
     }\label{fig:vortex_third}
 \end{figure}
 
@@ -219,19 +220,20 @@ slightly compromise the overall leading error term of the fifth-order spatial di
 
 \begin{figure}
     \centering
-    \begin{subfigure}{70mm}
+    \begin{subfigure}{\textwidth}
         \centering
-        \includegraphics[width=0.95\textwidth]{fig/weno5_vortex_error_fourth}
+        \includegraphics[width=0.75\textwidth]{fig/weno5_vortex_error_fourth}
     \end{subfigure}
-    \begin{subfigure}{70mm}
+    \par\bigskip
+    \begin{subfigure}{\textwidth}
         \centering
-        \includegraphics[width=0.95\textwidth]{fig/weno5_vortex_time_fourth}
+        \includegraphics[width=0.75\textwidth]{fig/weno5_vortex_time_fourth}
     \end{subfigure}
     \caption{The \( L_{1} \) errors of the isentropic vortex advection test problem
         solved by third- and fourth-order temporal schemes combined with WENO5 spatial method.
         The \( L_{1} \) errors
-        with respect to the grid resolutions (\textbf{left});
-        with respect to the computation time (\textbf{right}).
+        with respect to the grid resolutions (\textbf{top});
+        with respect to the computation time (\textbf{bottom}).
     }\label{fig:vortex_fourth}
 \end{figure}
 
@@ -339,22 +341,22 @@ appropriately.
 
 \begin{figure}
     \centering
-    \begin{subfigure}{0.49\textwidth}
+    \begin{subfigure}{0.495\textwidth}
         \centering
         \includegraphics[width=\textwidth]{fig/sod_rk3}
         \caption{}\label{subfig:sod_rk3}
     \end{subfigure}
-    \begin{subfigure}{0.49\textwidth}
+    \begin{subfigure}{0.495\textwidth}
         \centering
         \includegraphics[width=\textwidth]{fig/sod_pif3}
         \caption{}\label{subfig:sod_pif3}
     \end{subfigure}
-    \begin{subfigure}{0.49\textwidth}
+    \begin{subfigure}{0.495\textwidth}
         \centering
         \includegraphics[width=\textwidth]{fig/sod_osf3}
         \caption{}\label{subfig:sod_osf3}
     \end{subfigure}
-    \begin{subfigure}{0.49\textwidth}
+    \begin{subfigure}{0.495\textwidth}
         \centering
         \includegraphics[width=\textwidth]{fig/sod_osf3_wenodiff}
         \caption{}\label{subfig:sod_osf3_wenodiff}
@@ -437,16 +439,17 @@ turn the jet into a less narrow and less elongated shape along the diagonal.
 
 \begin{figure}
     \centering
-    \begin{subfigure}{70mm}
+    \begin{subfigure}{\textwidth}
         \centering
-        \includegraphics[width=0.95\textwidth]{fig/implosion_osf3.png}
+        \includegraphics[width=0.75\textwidth]{fig/implosion_osf3.png}
     \end{subfigure}
-    \begin{subfigure}{70mm}
+    \par\bigskip
+    \begin{subfigure}{\textwidth}
         \centering
-        \includegraphics[width=0.95\textwidth]{fig/implosion_rk3.png}
+        \includegraphics[width=0.75\textwidth]{fig/implosion_rk3.png}
     \end{subfigure}
     \caption{The density profile of the implosion test
-        with oSF-PIF3 (\textbf{left}) and with RK3 (\textbf{right})
+        with oSF-PIF3 (\textbf{top}) and with RK3 (\textbf{bottom})
         resolved on \( 400 \times 400 \) grid resolution.
         The color map ranges from \( 0.3 \) to \( 1.2 \), and
         40 evenly-spaced contour lines are over-plotted with
@@ -620,7 +623,7 @@ Explicitly, the initial condition is given as,
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.95\textwidth]{fig/shu45_2d_snapshot.png}
+    \includegraphics[width=\textwidth]{fig/shu45_2d_snapshot.png}
     \caption{2D density maps of inclined 2D Shu-Osher test problem
         at \( t=0 \) and \( t=1.8 \). The test was performed on a 2D simulation box
         of \(1024 \times 1024 \) resolution with the SF-PIF4 method.
@@ -643,13 +646,14 @@ The 2D density map of the initial and final conditions are plotted in~\cref{fig:
 
 \begin{figure}
     \centering
-    \begin{subfigure}{70mm}
+    \begin{subfigure}{\textwidth}
         \centering
-        \includegraphics[width=0.95\textwidth]{fig/shu45_weno5_256}
+        \includegraphics[width=0.75\textwidth]{fig/shu45_weno5_256}
     \end{subfigure}
-    \begin{subfigure}{70mm}
+    \par\bigskip
+    \begin{subfigure}{\textwidth}
         \centering
-        \includegraphics[width=0.95\textwidth]{fig/shu45_weno5_256_zoomed}
+        \includegraphics[width=0.75\textwidth]{fig/shu45_weno5_256_zoomed}
     \end{subfigure}
     \caption{One dimensional density profiles along the \( x_{\parallel} \) direction 
         of the inclined Shu-Osher problem at \( t = 1.8 \).
@@ -698,13 +702,13 @@ to see the different behaviors of four different temporal solvers.
 
 \begin{figure}
     \centering
-    \begin{subfigure}{140mm}
+    \begin{subfigure}{\textwidth}
         \centering
-        \includegraphics[width=0.9\textwidth]{fig/2drp_c3_weno5_rk_1600.png}
+        \includegraphics[width=\textwidth]{fig/2drp_c3_weno5_rk_1600.png}
     \end{subfigure}
-    \begin{subfigure}{140mm}
+    \begin{subfigure}{\textwidth}
         \centering
-        \includegraphics[width=0.9\textwidth]{fig/2drp_c3_weno5_sfPIF_1600.png}
+        \includegraphics[width=\textwidth]{fig/2drp_c3_weno5_sfPIF_1600.png}
     \end{subfigure}
     \caption{The density maps of Configuration 3 at \( t = 0.8 \).
         \textbf{Left column:} The solutions using RK3 (top) and SF-PIF3 (bottom).
@@ -755,7 +759,7 @@ secondary shock wave and the slip line.
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.85\textwidth]{fig/dmr_overview_sf4.png}
+    \includegraphics[width=\textwidth]{fig/dmr_overview_sf4.png}
     \caption{The solution density profile of Double Mach reflection test
         solved with SF-PIF4 method on a \( 4096 \times 2048 \) grid resolution.
         The solid black curves represent the forty levels of contour lines
@@ -777,13 +781,13 @@ is portrayed in~\cref{fig:dmr_overview}.
 
 \begin{figure}
     \centering
-    \begin{subfigure}{140mm}
+    \begin{subfigure}{\textwidth}
         \centering
-        \includegraphics[width=0.95\textwidth]{fig/dmr_weno5_rk_4096y2.png}
+        \includegraphics[width=\textwidth]{fig/dmr_weno5_rk_4096y2.png}
     \end{subfigure}
-    \begin{subfigure}{140mm}
+    \begin{subfigure}{\textwidth}
         \centering
-        \includegraphics[width=0.95\textwidth]{fig/dmr_weno5_sf_4096y2.png}
+        \includegraphics[width=\textwidth]{fig/dmr_weno5_sf_4096y2.png}
     \end{subfigure}
     \caption{The density map of the double Mach reflection test at \( t = 0.25 \)
         zoomed-in near the jet. Forty levels of contour lines are over-plotted
@@ -818,13 +822,13 @@ including the diagonal plane of the 3D computational cubic.
 
 \begin{figure}
     \centering
-    \begin{subfigure}{140mm}
+    \begin{subfigure}{\textwidth}
         \centering
-        \includegraphics[width=0.95\textwidth]{fig/3drp_all_rk4.png}
+        \includegraphics[width=\textwidth]{fig/3drp_all_rk4.png}
     \end{subfigure}
-    \begin{subfigure}{140mm}
+    \begin{subfigure}{\textwidth}
         \centering
-        \includegraphics[width=0.95\textwidth]{fig/3drp_all_sf4.png}
+        \includegraphics[width=\textwidth]{fig/3drp_all_sf4.png}
     \end{subfigure}
     \caption{The density maps of the 3D Riemann problem test at \( t = 0.53 \).
         Forty contour lines are over-plotted.
@@ -890,7 +894,7 @@ which are indispensable for high fidelity physical simulation studies.
 As mentioned in~\cref{chap:sfpif}, the SF-PIF method is an entirely independent temporal solver,
 which does not require any modification in the spatial high-order part of the simulation codes
 alike RK methods.
-As the purpose of demonstrating the portability of the SF-PIF method,
+For the purpose of demonstrating the portability of the SF-PIF method,
 this section will conduct several test problems using GP-WENO
 (instead of the conventional WENO as in the previous sections) described in~\cref{subsec:gp}
 as a spatial high-order reconstruction method
@@ -921,7 +925,7 @@ for this systematic test.
 \begin{figure}
     \centering
     \includegraphics[width=0.85\textwidth]{fig/hp_cmap_gp2_sf3.png}
-    \caption{The \( L_{1} \) errors of vortex advection problem solved by
+    \caption{The \( L_{1} \) errors of vortex advection problem in~\cref{subsec:vortex_weno} solved by
         GP-WENO and SF-PIF3 on a \( 400 \times 400 \) grid resolution.
         The radius of GP-WENO stencil is \( r=2 \), which is the same
         stencil size of the fifth-order WENO method.
@@ -934,13 +938,14 @@ for this systematic test.
 
 \begin{figure}
     \centering
-    \begin{subfigure}{70mm}
+    \begin{subfigure}{\textwidth}
         \centering
-        \includegraphics[width=0.95\textwidth]{fig/hp_best_ell_gp2_sf3}
+        \includegraphics[width=0.75\textwidth]{fig/hp_best_ell_gp2_sf3}
     \end{subfigure}
-    \begin{subfigure}{70mm}
+    \par\bigskip
+    \begin{subfigure}{\textwidth}
         \centering
-        \includegraphics[width=0.95\textwidth]{fig/hp_best_sig_gp2_sf3}
+        \includegraphics[width=0.75\textwidth]{fig/hp_best_sig_gp2_sf3}
     \end{subfigure}
     \caption{The slices of~\cref{fig:gp_hp_cmap} at the minimum error.
         The horizontal dotted line is the target error obtained from WENO method
@@ -975,13 +980,13 @@ degrade the solution accuracy in high-resolution simulation.
 
 \begin{figure}
     \centering
-    \begin{subfigure}{70mm}
+    \begin{subfigure}{\textwidth}
         \centering
-        \includegraphics[width=0.95\textwidth]{fig/gp2_vortex_error_sigma1}
+        \includegraphics[width=0.7\textwidth]{fig/gp2_vortex_error_sigma1}
     \end{subfigure}
-    \begin{subfigure}{70mm}
+    \begin{subfigure}{\textwidth}
         \centering
-        \includegraphics[width=0.95\textwidth]{fig/gp2_vortex_error_sigma03}
+        \includegraphics[width=0.7\textwidth]{fig/gp2_vortex_error_sigma03}
     \end{subfigure}
     \caption{The convergence rate of GP-WENO method with \( r=2 \) obtained by solving
         2D isentropic vortex advection problem on varying grid resolutions.
@@ -990,9 +995,9 @@ degrade the solution accuracy in high-resolution simulation.
         is identical to the results from~\cref{subsec:vortex_weno}.
         The GP length hyperparameters, \( \ell = 1 \) is used for both tests,
         and the shock-capturing hyperparameter
-        \textbf{Left:} \( \sigma = 1 \), and \textbf{Right:} \( \sigma = 0.3 \)
+        \textbf{top:} \( \sigma = 1 \), and \textbf{bottom:} \( \sigma = 0.3 \)
         are used.
-        The tests with \( \sigma = 1 \) on the left panel have smaller absolute \( L_{1} \) error,
+        The tests with \( \sigma = 1 \) on the top panel have smaller absolute \( L_{1} \) error,
         but failed to maintaining the convergence rate on high-resolution grids.
         On the other hand, tests with \( \sigma = 0.3 \) demonstrate consistent
         convergence rate on all grid configurations.
@@ -1019,7 +1024,7 @@ the case of \( \sigma = 1 \).
         The hyperparameters, \( \ell = 1 \) and \( \sigma = 0.3 \)
         are used for all simulation based on the results of~\cref{fig:gp_vortex_convergence}.
         The ``Speedup'' columns represent the relative speed-ups
-        compared to the WENO5 method with corresponding temporal solveers.
+        compared to the WENO5 method with corresponding SF-PIF temporal solvers.
         All simulation runs are
         performed on the four 20-cores
         Cascade Lake Intel Xeon processors, utilized 64 parallel threads.
@@ -1075,17 +1080,19 @@ Bottom and top boundaries are reflected walls.
 
 \begin{figure}
     \centering
-    \begin{subfigure}{120mm}
+    \begin{subfigure}{\textwidth}
         \centering
-        \includegraphics[width=0.95\textwidth]{fig/shockvortex_gp_ed20_sd5.png}
+        \includegraphics[width=0.84\textwidth]{fig/shockvortex_gp_ed20_sd5.png}
     \end{subfigure}
-    \begin{subfigure}{120mm}
+    \par\medskip
+    \begin{subfigure}{\textwidth}
         \centering
-        \includegraphics[width=0.95\textwidth]{fig/shockvortex_gp_ed20_sd10.png}
+        \includegraphics[width=0.84\textwidth]{fig/shockvortex_gp_ed20_sd10.png}
     \end{subfigure}
-    \begin{subfigure}{120mm}
+    \par\medskip
+    \begin{subfigure}{\textwidth}
         \centering
-        \includegraphics[width=0.95\textwidth]{fig/shockvortex_gp_ed20_sd20.png}
+        \includegraphics[width=0.84\textwidth]{fig/shockvortex_gp_ed20_sd20.png}
     \end{subfigure}
     \caption{The density colormaps of the strong shock vortex interaction problem.
         The GP-WENO (\( r = 2 \)) + SF-PIF3 method
@@ -1109,11 +1116,17 @@ based on the results of the previous section
 (e.g., \( \ell/\Delta = 20 \) is equivalent to \( \ell = 1 \) with the vortex problem of \( 400 \times 400 \) resolution grid)
 and various shock-capturing hyperparameters, \( \sigma/\Delta = 5, 10, \) and \( 20 \) are tested.
 
-As shown in~\cref{fig:shockvortex}, the higher values of \( \sigma/\Delta \) is better
+As shown in~\cref{fig:shockvortex}, the larger values of \( \sigma/\Delta \) is better
 to capture the small-scale fluid structures, especially on the trailing waves of the vortex
 around \( 0.5 \le x \le 1 \).
 However, as discussed in~\cref{subsec:2drp_c3_weno} before,
 identifying the numerical artifacts in the small-scale fluids is not feasible
 without extensive numerical tests.
-At a minimum, it is safe to say that the larger \( \sigma \) values
-can produce less dissipative numerical solutions capturing the small-scale structures.
+% At a minimum, it is safe to say that the larger \( \sigma \) values
+% can produce less dissipative numerical solutions capturing the small-scale structures.
+The only rational discussion is that the larger \( \sigma \) values
+can produce less dissipative solutions
+or generate numerical oscillations.
+Extensive research about the effect of \( \sigma \) is required
+to identifying the proper way to tune the hyperparameters,
+which remained a further study to this dissertation.

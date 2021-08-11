@@ -45,15 +45,15 @@ to enhance the numerical stability in the sharp gradient regions.
 The robustness and compactness of PPM attract scientists in the CFD community,
 and it is considered a central ``high-order'' strategy even today.
 
-On the other hand, the Weighted Essentially Non-Oscillatory (WENO) method~\cite{jiang1996efficient},
+On the other hand, the Weighted Essentially Non-Oscillatory (WENO) method proposed in~\cite{jiang1996efficient},
 the improved version of the ENO method~\cite{harten1987uniformly},
 takes a different route to strengthen the polynomial-based profile's stability.
 The WENO method divides the given stencil into smaller sub-stencils and considers
 lower-order polynomials in each sub-stencil.
 Then, by taking a convex combination of each sub-polynomials with nonlinear weighting factors,
 the WENO method constructs high-order, shock-capturing profiles in each stencil.
-The nonlinear weights are designed in a way that converges to the linear weights in a smooth region.
-(i.e., the convex combination in a smooth region is equivalent to the high-order, linear polynomial in a whole stencil)
+The nonlinear weights are designed in a way that converges to the linear weights in a smooth region
+(i.e., the convex combination in a smooth region is equivalent to the high-order, linear polynomial in a whole stencil).
 Therefore, the WENO method can be interpreted as a piecewise profile
 consists of varying degrees of polynomials depending on the local smoothness of the given data.
 
@@ -68,7 +68,7 @@ employs the marginal likelihood function of GP to measure the smoothness of the 
 instead of considering spatial derivatives in the conventional WENO method.
 The GP-WENO method demonstrated a high-order spatial accuracy and stability with a compact structure
 in the conventional finite volume discretization and
-the primitive-variable-based finite difference method.
+the primitive-variable-based finite difference method, the FD-Primitive~\cite{del2003efficient,del2007echo,chen2016fifth} method.
 
 In order to achieve highly accurate numerical solutions,
 the high-order temporal method must be considered alongside the spatial method
@@ -98,7 +98,7 @@ even with a lower order of temporal accuracy, \( q < p \).
         the solution over the entire range of grid resolutions is bounded to be second-order.
     }\label{fig:vortex_error_saturation}
 \end{figure}
-However, as reported in~\cite{lee2021recursive}, this occurrence is flipped to other ends,
+However, as reported in~\cite{lee2021recursive}, this occurrence is flipped to the other end,
 i.e., temporal errors are dominant over spatial errors,
 particularly in a fine grid configuration.
 As shown in~\cref{fig:vortex_error_saturation}, a critical grid delta \( \Delta s_{\text{crit}} \)
@@ -215,7 +215,7 @@ to convert the time derivatives to spatial derivatives requires
 explicit forms of the Jacobians (\( \partial_{\bU} \bF \)), Hessians (\( \partial_{\bU}^{2} \bF \)),
 and higher derivatives of the flux functions (\( \partial^{k}_{\bU} \bF \))
 on high-order schemes.
-Finding analytical derivations of \textit{Jacobian-like} terms is
+Finding analytical derivations of Jacobian-\textit{like} terms is
 a notoriously cumbersome process, specifically for nonlinear systems.
 For example, in the Euler equations, the flux Jacobians are \( 5 \times 5 \) matrices
 in three spatial dimensions, and the flux Hessians are \( 5 \times 5 \times 5 \) rank three tensors.
@@ -226,12 +226,12 @@ e.g., \( \partial_{\bU}^{3} \bF \).
 These terms are then \( 5 \times 5 \times 5 \times 5 \) rank four tensors,
 which makes the LW/CK procedure less appealing in fourth- or fifth-order temporal methods.
 
-Another limitation on \textit{Jacobian-like} terms is the dependency on the system of equations.
-Since the Jacobian-like terms are based on the flux functions of
-the governing equations of the system, the hard-coded \textit{Jacobian-like} terms
+Another limitation on Jacobian-\textit{like} terms is the dependency on the system of equations.
+Since the Jacobian-\textit{like} terms are based on the flux functions of
+the governing equations of the system, the hard-coded Jacobian-\textit{like} terms
 should be re-derived and re-implemented whenever to change the system of equations.
-For example, the high-order scheme solving Euler equations that uses \textit{Jacobian-like} terms
-needs to be modified to solve other systems, such as Magnetohydrodynamics (MHD) equations.
+For example, the high-order scheme solving Euler equations that uses Jacobian-\textit{like} terms
+needs to be modified to solve other systems, such as magnetohydrodynamics (MHD) equations.
 
 
 

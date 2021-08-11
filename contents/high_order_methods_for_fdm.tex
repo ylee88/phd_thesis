@@ -79,7 +79,7 @@ The Runge-Kutta methods and the Lax-Wendroff type methods will be introduced in~
 for achieving high-order in time accuracy for FDM formulation.
 
 
-\section{High-Order Reconstruction Schemes}\label{sec:recons}
+\section{High-Order reconstruction schemes}\label{sec:recons}
 
 The high-order reconstruction schemes play a pivotal role in reducing numerical errors
 on the \textit{spatial axis} for solving discrete PDEs under FVM and FDM formulations.
@@ -220,7 +220,7 @@ can be represented as a convex combination with nonlinear weights \( \omega_{m} 
     \centering
     \includegraphics[width=0.85\textwidth]{fig/weno_p1p2p3}
     \caption{The reconstructed profiles in three sub-stencils of the fifth-order WENO-JS scheme.
-        The black dots and horizontal dotted lines represent the volume averaged quantities.
+        The black dots and horizontal dotted lines represent the volume-averaged quantities.
         Note that there is a sharp discontinuity at \( x = x_{\imh} \),
         resulting three different reconstructed pointwise values at \( x = x_{i \pm \half} \)
         of each polynomial, marked as stars.
@@ -286,7 +286,7 @@ and weighting on \( p_{3} (x) \) dominantly to avoid reconstruction on the disco
 
 
 
-\subsection{Gaussian Process Reconstruction}\label{subsec:gp}
+\subsection{Gaussian Process reconstruction}\label{subsec:gp}
 
 Over decades, the high-order data reconstruction/interpolation methods
 for solving hyperbolic PDEs are based on the polynomial approach.
@@ -305,10 +305,13 @@ Another issue for the polynomial-based approach is that the method must be carri
 on a fixed size data stencil, which means changing in stencil size~--~thus it changes the order
 of accuracy~--~requires a complete redesign of the code.
 
-Recently, practitioners have designed \textit{non-polynomial} reconstruction/interpolation methods.
+Recently, practitioners have designed \textit{non-polynomial} (or polynomial-free)
+reconstruction/interpolation methods~\cite{moroney2006finite,moroney2007three,guo2017rbf,bigoni2017adaptive}.
 Reyes et al.~\cite{reyes2018new,reyes2019variable} proposed a novel way to use the Gaussian process (GP)
 to estimate the data at any arbitrary point in high-order accuracy.
-Based on the stochastic process, GP reconstruction/interpolation methods are able to predict the data
+% Based on the stochastic process,
+Based on the probabilistic conditioning property by Bayes' Theorem to the joint Gaussian distribution on observed data,
+GP reconstruction/interpolation methods are able to predict the data
 on desired points (usually at cell interfaces) without considering any polynomials;
 therefore, the code is readily extended to a higher order by simply changing the size of the stencil.
 In the language of GP, this process can be interpreted in the way that
@@ -326,8 +329,8 @@ A GP is fully defined by two functions:
 The function \( f \) is then said to belong to the GP with mean and covariance function,
 written as \( f \sim GP(\mu_{f} (\bx), K(\bx, \by)) \).
 
-Suppose there are \( N \) sample points for the function \( f \), namely, \( \bff = \left[ f(\bx_{1}), \dots, f(\bx_{N}) \right] \)
-that are known, the likelihood \( \mathcal{L} \), the probability of \( \bff \) given the prior GP model,
+Suppose that there are \( N \) sample points for the unknown function \( f \), namely, \( \bff = \left[ f(\bx_{1}), \dots, f(\bx_{N}) \right] \)
+that are known, then the likelihood \( \mathcal{L} \), the probability of \( \bff \) given the prior GP model,
 of the input data \( \bff \), is given by,
 \begin{equation}\label{eq:gp_likelihood}
     \mathcal{L} = P(\bff) \equiv \left( 2 \pi \right)^{- \frac{N}{2}} \det \left| \bK \right|^{-\half}
@@ -351,10 +354,10 @@ It is common practice to take the zero mean everywhere, then \cref{eq:gp_posteri
 \end{equation}
 reveals GP prediction with known function samples \( \bff \), which is the \textit{pointwise} representation.
 
-However, in the reconstruction scheme, the known function samples should be given as \textit{volume averaged} quantities,
+However, in the reconstruction scheme, the known function samples should be given as \textit{volume-averaged} quantities,
 not as pointwise values. Therefore, the GP prediction has to be modified to adapt to the data type changes.
 
-Favorably, the volume averaging operator constitutes a linear operation (e.g.,~\cref{eq:recon_poly_linear}).
+Favorably, the volume averaging operator constitutes a linear operation (e.g., \cref{eq:recon_poly_linear}).
 The linear operations on Gaussian random variables result in new Gaussian random variables with
 linearly transformed mean and covariance; thus, the GP \textit{interpolation} scheme (\cref{eq:gp_intp})
 can be transformed into the GP \textit{reconstruction} scheme
@@ -468,7 +471,7 @@ for computational efficiency.
     \centering
     \includegraphics[width=0.85\textwidth]{fig/gp_linear_recon}
     \caption{GP reconstructed profiles with the same data as~\cref{fig:weno_profiles,fig:weno_profiles_nonlinW}
-        with different hyperparameters \( \ell = 1.0, 1.5, 3.0 \).
+        with different hyperparameters \( \ell/\Delta = 1.0, 1.5, 2.0 \). The radius of GP stencil is \( r=2 \).
         Note that all the reconstructed profiles produce a new local minimum near \( x = x_{\iph} \),
         which violates the monotonic-preserving condition and leads to numerical oscillations.
         The shaded areas represent 95\% confidence regions from the posterior variance.
@@ -660,8 +663,16 @@ for constructing smoothness indicators in GP,
 \begin{equation}\label{eq:gp_smoothness_ind}
     \beta_{m} = \bff_{m}^{T} \left( \bK^{-1}_{m} \right) \bff_{m}.
 \end{equation}
-To handle discontinuity, a second hyperparameter, \( \sigma \), should be used in~\cref{eq:gp_smoothness_ind},
-to discriminate discontinuities from smooth regions. \( \sigma \) should be on the order of the grid spacing.
+A second hyperparameter, \( \sigma \), should be introduced
+to calculate the kernel matrix \( \bK_{m} \) in~\cref{eq:gp_smoothness_ind}
+to handle the discontinuity accurately.
+Using different hyperparameters in the GP-WENO reconstruction
+can be interpreted as different purposes of viewing angles to the given data:
+\( \ell \), to smoothing the data (\cref{eq:gp_recon_with_zvec}),
+and \( \sigma \), to discriminating discontinuities (\cref{eq:gp_smoothness_ind}).
+By utilizing two different hyperparameters \( \ell \) and \( \sigma \),
+the GP-WENO method have one additional degree of freedom
+to control the scale of the shock-detecting feature.
 
 Like GP reconstruction weights~\cref{eq:gp_recon_with_zvec}, the calculations of
 GP smoothness indicators \( \beta_{m} \) can be expressed in a more computationally efficient form.
@@ -712,7 +723,7 @@ in the unifrom grid can be summarized as below:
 \begin{figure}
     \centering
     \includegraphics[width=0.85\textwidth]{fig/gp_weno_nonlinW}
-    \caption{GP-WENO Reconstructed profiles with nonlinear weights with the same data as~\cref{fig:gp_linear_recon}.
+    \caption{GP-WENO reconstructed profiles with nonlinear weights with the same data as~\cref{fig:gp_linear_recon}.
         Hyperparameters \( \ell = 2\Delta \) and \( \sigma = 2\Delta \) are used. 95\% confidence regions
         are shaded with the correspoinding colors, and the opacity of each prediction measures the nonlinear weights
         on that sub-stencil.
@@ -722,7 +733,7 @@ in the unifrom grid can be summarized as below:
 
 
 
-\section{High-Order Time Integration Schemes}\label{sec:time_integration}
+\section{High-Order time integration schemes}\label{sec:time_integration}
 
 A high-order temporal discretization scheme ought to be considered alongside
 the high-order spatial data interpolation/reconstruction to acquire
@@ -740,7 +751,7 @@ no matter the order of spatial accuracy is used.
 Therefore, a high-order FDM scheme requires a meticulously designed
 temporal discretization method that ensures the solution’s accuracy and stability.
 
-\subsection{Strong Stability Preserving Runge-Kutta Methods}\label{subsec:ssprk}
+\subsection{Strong Stability Preserving Runge-Kutta methods}\label{subsec:ssprk}
 
 The Runge-Kutta (RK) method is the most popular way to integrate
 the semi-discretized form of FDM (\cref{eq:fdm_discrete}) over the time axis.
@@ -771,7 +782,7 @@ which ensures TVD property by sequentially applying convex combinations of the
 first-order forward Euler method as a building-block at each sub-stage.
 In this way, the desired TVD property is achieved if each of the sub-stage is TVD\@.
 
-SSP-RK method uses that the forward Euler method for building each sub-stages.
+SSP-RK method uses that the forward Euler discretization method for building each sub-stages.
 Since the forward Euler method is strongly stable under the Courant–Friedrichs–Lewy (CFL) condition;
 thus, if all sub-stages of the RK method can be described as a form of the forward Euler method,
 then the TVD property is fulfilled by virtue of the forward Euler method.
@@ -848,7 +859,7 @@ which progressively refines the grid resolutions
 and increases data communications around the simulations’ interesting features.
 
 
-\subsection{Lax–Wendroff Type Methods}\label{subsec:laxwendroff}
+\subsection{Lax–Wendroff type methods}\label{subsec:laxwendroff}
 
 The Lax-Wendroff method~\cite{lax1959systems} rely on the Taylor expansion in time
 to achieve high-order in time accuracy:

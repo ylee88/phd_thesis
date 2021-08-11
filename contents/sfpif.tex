@@ -25,7 +25,7 @@ Furthermore, as the Jacobian/Hessian calculations highly depend on the
 type of the governing system under consideration,
 it is required to re-derive the Jacobian/Hessian terms analytically every time
 we need to solve a new system, e.g., shallow water equations or magnetohydrodynamics (MHD) equations, to name a few.
-In addition, the calculation complexities of the Jacobian-like terms are drastically increasing
+In addition, the calculation complexities of the Jacobian-\textit{like} terms are drastically increasing
 with the number of spatial dimensions and the order of accuracy.
 
 
@@ -303,19 +303,20 @@ in the existing simulation code for improving the code performance.
 However, the direct analytic derivations for flux Jacobians, Hessians (and more)
 remain as the implementation hurdle for the PIF method.
 Unlike SSP-RK methods, the PIF method requires different code implementation
-for a different system of equations only because of the \textit{Jacobian-like} terms. (e.g., \( \bF_{\bU}, \bF_{\bU\bU}, \bF_{\bU\bU\bU}, \dots \))
+for a different system of equations only because of the Jacobian-\textit{like} terms.
+(e.g., \( \bF_{\bU} \), \( \bF_{\bU\bU} \), \( \bF_{\bU\bU\bU}, \dots \))
 This dissertation aims to tackle this problem,
 making a different strategy to use the LW/CK procedure,
-which does not require analytical derivations of \textit{Jacobian-like} terms.
+which does not require analytical derivations of Jacobian-\textit{like} terms.
 
 
 
-\section{System-Free Approach}\label{sec:original_sf}
+\section{System-Free approach}\label{sec:original_sf}
 
 This section aims to provide a new alternate formulation of computing
 the multiplications of Jacobian-vector and Hessian-vector-vector terms in~\crefrange{eq:pif_Ft}{eq:pif_divtx}.
 The new approach will replace the necessity for analytical derivations
-of the Jacobian-like terms in the original PIF method that is system-dependent,
+of the Jacobian-\textit{like} terms in the original PIF method that is system-dependent,
 with a new system-independent formulation, based on the so-called ``Jacobian-free'' method,
 which is widely used for Newton-Krylov-type
 iterative schemes~\cite{gear1983iterative,brown1990hybrid,knoll2004jacobian,knoll2011application}.
@@ -551,10 +552,10 @@ by taking the minimum value between $\overline{\varepsilon}$ and $\dt$,
 to prevent the division by zero case.
 
 
-\section{Recursive System-Free Approach}\label{sec:recursive_sf}
+\section{Recursive System-Free approach}\label{sec:recursive_sf}
 
 The original system-free (SF) approach presented in the previous section
-provides good approximations of tensor contractions between \textit{Jacobian-like} terms and vectors.
+provides good approximations of tensor contractions between Jacobian-\textit{like} terms and vectors.
 However, the original SF method becomes less attractive for
 any PIF method higher than third-order accuracy,
 as it demands increasing complexity in code implementation,
@@ -563,11 +564,11 @@ For example, \cref{eq:sf_don_free_vwx} requires 28 times flux function calls
 for just getting a single tensor contraction, \( \bF_{\bU\bU\bU} \cdot \bV \cdot \bW \cdot \bX \).
 It is worth noting that the major bottleneck of the original SF method
 stems from \cref{eq:sf_hes_free_vw} and \cref{eq:sf_don_free_vwx}
-that require to perform the \textit{Jacobian-like} approximations multiple times.
+that require to perform the Jacobian-\textit{like} approximations multiple times.
 
 To avoid the additional modifications for the case of the tensor contractions with different vectors,
 the improved version of the SF method was proposed in~\cite{lee2021recursive}.
-This new, improved SF method, apply the Jacobian-free method recursively to construct the high-order Jacobian-like terms.
+This new, improved SF method, apply the Jacobian-free method recursively to construct the high-order Jacobian-\textit{like} terms.
 
 The recursive SF method starts from defining a functional \( \mathcal{D}_{u} \)
 that represents the Jacobian-free method denoted in~\cref{eq:sf_jac_free}:
@@ -659,7 +660,7 @@ This is a huge improvement in both performance and compactness.
 By utilizing~\crefrange{eq:rsf_functional}{eq:rsf_don_free},
 all the tensor contractions needed in the fourth-order PIF method
 in \crefrange{eq:pif_Ft}{eq:pif_divtx} can be approximated without
-the analytical calculations of the \textit{Jacobian-like} terms.
+the analytical calculations of the Jacobian-\textit{like} terms.
 Combining the recursive SF method, the PIF method can be implemented more efficiently,
 allowing the system independence of the high-order scheme.
 It should be noted that the recursive modifications of the SF method
@@ -761,20 +762,18 @@ and the corresponding fluxes \( \mathcal{F}^{n}_{ijk} = (\bF^{n}_{ijk}, \bG^{n}_
 
 
 
-\section{System-Free PIF method with Source term}\label{sec:sfpif_source}
-
-\noter{Math is looking good, but missing numerical results}
+\section{System-Free PIF method with source term}\label{sec:sfpif_source}
 
 Since the PIF method depends on the LW/CK procedure,
 the PIF method must be modified accordingly when the governing equation has changed.
-For instance, the non-homogeneous system of equations with source term \( \bS(\bU) \),
+For instance, the non-homogeneous system of equations with a source term \( \bS(\bU) \),
 the solution updating strategy for the original PIF method~\cref{eq:pif_time_avg}
 should be modified with appropriately time-averaged source term.
 Consider a conservative equations with a source term \( \bS(\bU) \),
 \begin{equation}\label{eq:sf_source_gov}
-    \bU_{t} + \nabla \cdot \mathcal{F}(\bU) = \bS(\bU),
+    \bU_{t} + \nabla \cdot \mathcal{F}(\bU) = \bS(\bU).
 \end{equation}
-taking time-averaging,
+Taking time-averaging,
 \begin{equation}\label{eq:sf_source_time_average}
     \bU^{n + 1} = \bU^{n} - \dt \left( \partial_{x} \bF^{avg} + \partial_{y} \bG^{avg} + \partial_{z} \bH^{avg} \right)
         + \dt \bS^{avg},
@@ -794,7 +793,7 @@ where
         &= \bS^{appx,q} (\bx, t^{n}) + \mathcal{O}(\Delta t^{q}).
     \end{split}
 \end{equation}
-for the fourth-order PIF method,
+For the fourth-order PIF method, the fourth-order approximation of the time-averaged source term is needed,
 \begin{equation}\label{eq:sf_source_4order}
     \begin{split}
         \bS^{appx, 4} (\bx) = \bS (\bx, t^{n})
@@ -805,8 +804,10 @@ for the fourth-order PIF method,
 \end{equation}
 
 In order to modify the conventional PIF procedures
-in a way that maintaining the general mathematical structures
-in~\cref{sec:pif}, consider a modified flux divergence \( \Divs \) defined as,
+in a way that maintains the general mathematical structures
+in~\cref{sec:pif},
+% consider a modified flux divergence \( \Divs \) defined as,
+a modified version of the flux divergence \( \Divs \) can be considered as,
 \begin{equation}\label{eq:sf_source_divs}
     \Divs \coloneqq \Div - \bS.
 \end{equation}
@@ -830,8 +831,8 @@ through the LW/CK procedures:
 
 The equation independence property of the system-free method
 is rewarded in calculations of the source Jacobian \( \bS_{\bU} \) and Hessian \( \bS_{\bU\bU} \),
-since the only required job is to change the flux function
-in~\cref{eq:rsf_functional,eq:rsf_hes_free} to the source function, \( \bS(\bU) \).
+since the only required job is to change the flux function \( \bF(\cdot) \)
+in~\cref{eq:rsf_functional,eq:rsf_hes_free} to the source function, \( \bS(\cdot) \).
 
 The time derivatives of the modified flux divergence, \( \Divs_{t} \) and \( \Divs_{tt} \),
 can be defined as linear combinations with the time derivatives of the conventional
@@ -888,13 +889,13 @@ thus, it can be combined with any high-order spatial method in general.
 
 However, as like other Lax-Wendroff type schemes,
 the PIF method highly depends on the system of equations,
-requiring analytical derivations for \textit{Jacobian-like} terms.
+requiring analytical derivations for Jacobian-\textit{like} terms.
 Although the symbolic manipulation tools can aid these calculations,
-\textit{Jacobian-like} terms remain as a major implementation hurdle due to their perplexing structures.
+Jacobian-\textit{like} terms remain as a major implementation hurdle due to their perplexing structures.
 
 The (original, non-recursive) system-free (SF) approach provides capability
-to Lax-Wendroff type scheme to bypass all the analytical derivations of Jacobian-like terms,
-approximating tensor contractions between Jacobian-like terms and arbitrary vectors.
+to Lax-Wendroff type scheme to bypass all the analytical derivations of Jacobian-\textit{like} terms,
+approximating tensor contractions between Jacobian-\textit{like} terms and arbitrary vectors.
 The major advantage of SF method lies in ease of its code implementation for practical use.
 By combining with PIF method, SF-PIF method can be applied to any system of equations
 to furnish high-order in temporal accuracy in a single-step.
@@ -910,6 +911,6 @@ This feature allows to extend SF-PIF method to the fourth-order accuracy efficie
 
 It is important to note that the SF method is neither designed particularly for the PIF method
 nor any specific numerical methods in CFD.
-Instead, it is solely intended for approximating the Jacobian-like tensor contractions,
+Instead, it is solely intended for approximating the Jacobian-\textit{like} tensor contractions,
 so the SF approach is applicable in otehr numerical algorithms
 to enhance the calculation speed and implementation efficiency.
